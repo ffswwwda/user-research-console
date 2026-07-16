@@ -391,11 +391,11 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
         </div>
         <div class="field">
           <label>种子材料</label>
-          <textarea id="seed" rows="4" placeholder="粘贴新品说明 / 活动方案 / 品类洞察…">某新品计划下月上市：主打"更安静、更省心"的卖点，定价较现有主力款高约 15%；首批面向老用户与达人内测，配套 30 天无忧退。社媒侧准备一轮种草内容 + 2 位垂类达人。用户研究基座显示：痛点击中者占比约 10%、价格敏感者约 18%。</textarea>
+          <textarea id="seed" rows="4" placeholder="粘贴新品说明 / 活动方案 / 品类洞察…" oninput="this.dataset.userEdited=1">某新品计划下月上市：主打"更安静、更省心"的卖点，定价较现有主力款高约 15%；首批面向老用户与达人内测，配套 30 天无忧退。社媒侧准备一轮种草内容 + 2 位垂类达人。用户研究基座显示：痛点击中者占比约 10%、价格敏感者约 18%。</textarea>
         </div>
         <div class="field">
           <label>预测需求（自然语言）</label>
-          <input id="question" value="政策落地首周，市民情绪与出行行为会如何演化？主要争议点是什么？">
+          <input id="question" value="政策落地首周，市民情绪与出行行为会如何演化？主要争议点是什么？" oninput="this.dataset.userEdited=1">
           <div class="chips" id="qChips"></div>
         </div>
         <div class="field">
@@ -849,6 +849,24 @@ const SCENES={
     risks:[['伪需求','若仅由少量极端用户驱动，机会规模有限'],['供给错配','机会点与现有供给能力不匹配时难以落地']],
     actions:[['验证需求','用 VOC 回看需求频次与强度'],['切入排序','按 需求强度×人群规模×供给可行 排序机会'],['补全供给','针对价格敏感者补入门款']]}
 };
+// 场景默认输入：切场景时自动填充 seed/question/marketBase（用户可继续编辑）
+const SCENE_DEFAULTS={
+  product:{
+    seed:'某新品计划下月上市：主打"更安静、更省心"的卖点，定价较现有主力款高约 15%；首批面向老用户与达人内测，配套 30 天无忧退。社媒侧准备一轮种草内容 + 2 位垂类达人。用户研究基座显示：痛点击中者占比约 10%、价格敏感者约 18%。',
+    question:'新品首发转化与用户反馈会如何演化？哪些分群最可能差评反弹？',
+    marketBase:100000
+  },
+  social:{
+    seed:'计划发布一轮社媒种草内容：主题围绕「请描述你的产品/活动」展开，形式为清单 + 直播切片 + 图文短视频，目标账号矩阵 = 品牌主号 + 2 位垂类达人 + 1 条种草官副线。准备绑定宠粉日 / 双11 活动节点，配抽奖 + 赠礼钩子。基座显示：尝鲜型 10% / 价格敏感 18% / 品质党 15% / 观望 20% / 痛点击中者 10% / 差评传播者 8%。',
+    question:'这条社媒内容会不会爆 / 会不会翻车？哪个分群会放大传播？',
+    marketBase:500000
+  },
+  category:{
+    seed:'正在评估「成人用品便携 / 旅行装」品类切入机会：需求来自用户访谈中 20% 用户提到"出差/聚会场景缺一款好收纳的"，社媒有 60+ 篇相关讨论；现有供给 95% 集中于家用大件，便携细分基本空白。基座显示：痛点击中者 10% / 价格敏感 18% / 品质党 15% / 竞品用户 15%。',
+    question:'这个品类机会点是否成立？哪类需求最值得切入？现有品类结构该怎么优化？',
+    marketBase:200000
+  }
+};
 
 /* ---------- personas & group priors（由用户研究基座驱动） ---------- */
 // PERSONAS 即用户分群名列表；三场景共用 SEGMENTS
@@ -959,7 +977,18 @@ const state={done:false,pop:512,edges:0,scene:'product',mood:'',graphData:null,t
 
 document.getElementById('pop').oninput=function(){document.getElementById('popLabel').textContent=this.value};
 function updateVarLabels(){const lab=VARS_LABEL[state.scene]||VARS_LABEL.product;document.getElementById('v1name').textContent=lab.v1;document.getElementById('v2name').textContent=lab.v2;document.getElementById('v3name').textContent=lab.v3}
-function refreshChips(){const s=document.getElementById('scene').value;state.scene=s;const box=document.getElementById('qChips');box.innerHTML='';SCENES[s].q.forEach(q=>{const c=document.createElement('div');c.className='chip';c.textContent=q;c.onclick=()=>{document.getElementById('question').value=q;bindHover()};box.appendChild(c)});bindHover();updateVarLabels();
+function refreshChips(){
+  const s=document.getElementById('scene').value;state.scene=s;
+  const d=SCENE_DEFAULTS[s];
+  // 联动场景默认：种子/问题/市场基数（用户可继续编辑）
+  if(d){
+    const seedEl=document.getElementById('seed');if(seedEl&&!seedEl.dataset.userEdited)seedEl.value=d.seed;
+    const qEl=document.getElementById('question');if(qEl&&!qEl.dataset.userEdited)qEl.value=d.question;
+    const mbEl=document.getElementById('marketBase');if(mbEl){mbEl.value=d.marketBase;document.getElementById('mbL').textContent=d.marketBase;mbEl.dataset.userEdited=''}
+  }
+  const box=document.getElementById('qChips');box.innerHTML='';
+  SCENES[s].q.forEach(q=>{const c=document.createElement('div');c.className='chip';c.textContent=q;c.onclick=()=>{const qEl=document.getElementById('question');qEl.value=q;bindHover()};box.appendChild(c)});
+  bindHover();updateVarLabels();
   const bc=document.getElementById('briefCard');if(bc)bc.style.display=(s==='social')?'block':'none';
   const mb=document.getElementById('mbLabel');if(mb)mb.innerHTML=(s==='social'?'账号矩阵粉丝规模（曝光换算用）：':(s==='category'?'品类可触达人群（估算用）：':'目标人群基数（仅新品销量场景用于估算）：'))+'<b id="mbL">'+(document.getElementById('marketBase')?document.getElementById('marketBase').value:'100000')+'</b>';
 }
@@ -1171,12 +1200,14 @@ function predictViral(b){
   const emoR=SOCIAL_BASE.emotions[b.emo]||SOCIAL_BASE.avgViral;
   const themeR=SOCIAL_BASE.themes[b.theme]||SOCIAL_BASE.avgViral;
   const authMul=(SOCIAL_BASE.authorTypes[b.author]||{infl:0.5}).infl;
-  let rate=0.4*formR+0.3*emoR+0.3*themeR;
-  rate*=authMul;
-  rate*=(1+0.6*b.v1);                       // 内容契合度
-  rate*=(1+0.4*b.v2);                       // 互动/激励力度
-  rate*=(1+0.8*b.v3*Math.max(0,authMul-0.4)); // KOL 投放（高影响力账号放大更明显）
-  if(b.activity)rate*=SOCIAL_BASE.activityLift;
+  const base=0.4*formR+0.3*emoR+0.3*themeR;                 // 数据基准（40-80 区间）
+  const authFactor=0.7+0.3*authMul;                          // 0.82-1.0（弱账号不放大，强账号不破顶）
+  let rate=base*authFactor;
+  rate+=(b.v1-0.5)*20;                                       // 内容契合度：±10
+  rate+=(b.v2-0.5)*12;                                       // 互动/激励：±6
+  rate+=(b.v3-0.5)*8;                                        // KOL 投放：±4
+  if(b.v3>0.3)rate+=(b.v3-0.3)*12*Math.max(0,authMul-0.5);   // KOL 投放对高影响力账号额外放大
+  if(b.activity)rate*=SOCIAL_BASE.activityLift;              // 活动节点抬升
   return clip(Math.round(rate),0,100);
 }
 function predictExposure(reachPct,b){
