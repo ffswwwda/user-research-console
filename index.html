@@ -294,6 +294,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
       <div class="nav-item" data-page="algo">算法引擎</div>
       <div class="nav-item" data-page="report">预测报告</div>
       <div class="nav-item" data-page="base">用户基座</div>
+      <div class="nav-item" data-page="method">预测方法</div>
       <div class="nav-item" data-page="arch">架构说明</div>
     </div>
   </div>
@@ -314,6 +315,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
   <div class="side-item" data-page="report"><span class="ic">📄</span>预测报告</div>
   <div class="side-title">了解</div>
   <div class="side-item" data-page="base"><span class="ic">🧬</span>用户基座</div>
+  <div class="side-item" data-page="method"><span class="ic">🧭</span>预测方法</div>
   <div class="side-item" data-page="arch"><span class="ic">🏗️</span>架构说明</div>
   <div class="side-item" data-page="arch"><span class="ic">⚙️</span>技术栈</div>
 </aside>
@@ -742,6 +744,99 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
         <span id="socialImportMsg" style="font-size:12px;color:var(--cyan)"></span>
       </div>
       <div id="socialBaseView" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- ================= METHOD ================= -->
+  <section class="page" id="page-method">
+    <div class="crumb" onclick="go('console')">← <b>预测工作台</b><span class="sep">/</span>预测方法</div>
+    <div class="page-head">
+      <h1 class="page-title">三种预测路径 · 一张图说清楚</h1>
+      <p class="page-sub">"预测"在不同工具里有完全不同的实现方式。这一页用一条主线把它们分开：<b>回顾式</b>（看历史）→ <b>预测式</b>（算未来）→ <b>接大模型</b>（让 LLM 补齐人格/语义/聚类的最后一公里）。你既能看懂每个工具能回答什么问题，也能知道怎样把多个工具的数据接进来，让预测更准。</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="glass stat" style="border-color:rgba(168,85,247,.3)">
+        <div class="stat-label" style="color:var(--purple)">① 回顾式 · 关键词匹配</div>
+        <div class="stat-val" style="font-size:18px;background:linear-gradient(90deg,#a855f7,#534AB7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">content-analytics-dashboard</div>
+        <div class="stat-sub" style="line-height:1.7">输入 brief → 关键词提取 → 在历史内容库里找相似样本 → 输出"类似的内容历史上跑出多少"。<br><b>能回答</b>：过去类似的跑多少<br><b>盲区</b>：没相似样本时结果空转</div>
+      </div>
+      <div class="glass stat" style="border-color:rgba(0,212,255,.3)">
+        <div class="stat-label" style="color:var(--cyan)">② 预测式 · 推演仿真</div>
+        <div class="stat-val" style="font-size:18px;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">user-research-console</div>
+        <div class="stat-sub" style="line-height:1.7">输入 brief → 数据基座校准 → 几百个智能体跑 12 步社会演化 → 输出爆款率/触达/翻车风险。<br><b>能回答</b>：这条内容会怎么传播<br><b>盲区</b>：人格先验不准时整体偏移</div>
+      </div>
+      <div class="glass stat" style="border-color:rgba(16,185,129,.3)">
+        <div class="stat-label" style="color:#10b981">③ 接大模型 · 升维</div>
+        <div class="stat-val" style="font-size:18px;background:linear-gradient(90deg,#10b981,#534AB7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">LLM 增强版</div>
+        <div class="stat-sub" style="line-height:1.7">前两步先跑，LLM 在三件事上补齐：①从 VOC 原文做更精细分群 ②从内容库里做语义主题聚类 ③从用户回复做情感极性建模。<br><b>能回答</b>：①+②不能精确建模的部分<br><b>代价</b>：需要 LLM API，不能纯前端</div>
+      </div>
+    </div>
+
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>路径对比一览</div>
+      <table class="bench" style="font-size:13.5px">
+        <thead><tr><th>维度</th><th style="color:#a855f7">① 回顾式（关键词匹配）</th><th style="color:#00d4ff">② 预测式（推演仿真）</th><th style="color:#10b981">③ 接大模型（升维）</th></tr></thead>
+        <tbody>
+          <tr><td>数据来源</td><td>历史内容库（content_data.json）</td><td>用户研究基座 + 真实数据校准</td><td>①+② + LLM 提取的语义/人格</td></tr>
+          <tr><td>能回答</td><td>过去类似的跑多少</td><td>这条内容怎么传播/会翻车吗</td><td>①+②不能精确建模的部分</td></tr>
+          <tr><td>核心机制</td><td>关键词 + 相似样本</td><td>多智能体态度演化 + 公式模型</td><td>LLM 做分群/聚类/语义嵌入</td></tr>
+          <tr><td>运行时长</td><td>毫秒级</td><td>秒级（500 智能体 12 步）</td><td>LLM 调用决定（秒~分钟）</td></tr>
+          <tr><td>对数据量的敏感度</td><td>必须 ≥30 条相似样本</td><td>对样本数不敏感（靠分布）</td><td>对原始语料量极敏感（语料越多分群越细）</td></tr>
+          <tr><td>典型输出</td><td>"过去 10 条类似内容，爆款率均值 67%"</td><td>"预测爆款率 73% / 触达 96% / K=5.5"</td><td>"分群 1：3 类共 12% 人群，痛点是 X，预期..."</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>结合路径 · 历史 + 仿真（简单版）</div>
+      <div class="sec-desc" style="line-height:1.8">两条路径并行加权合成，置信度高于单路径。<b>路 A</b>历史匹配负责"过去类似跑多少"，<b>路 B</b>仿真推演负责"这条内容怎么传播"，两者加权合成输出最终预测，权重由样本量与仿真方差决定。</div>
+      <div class="algo-pre"><code>预测爆款率 = wA × 相似样本历史均值  +  wB × 仿真模型预测
+            其中 wA ∝ 相似样本数（≥30 时 wA 高）
+                wB ∝ 1 / 仿真方差（越稳定 wB 越高）</code></div>
+    </div>
+
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>数据源路由 · 不同目的接不同源</div>
+      <table class="bench" style="font-size:13.5px">
+        <thead><tr><th>预测目的</th><th>接入数据源</th><th>校准什么</th></tr></thead>
+        <tbody>
+          <tr><td>社媒传播预测</td><td>content_data.json（社媒帖+评论+互动）</td><td>SOCIAL_BASE 形式/情绪/主题/账号/活动</td></tr>
+          <tr><td>新品销量预测</td><td>VOC 评价 + 销量基线 + 竞品价</td><td>SEG_PRIOR（分群采纳率）+ 价格弹性</td></tr>
+          <tr><td>品类机会预测</td><td>category-insight-hub + 痛点频次</td><td>需求缺口分群 + 痛点强度</td></tr>
+          <tr><td>舆情/政策响应</td><td>政策原文 + 历史舆情演化</td><td>分群初始态度 + 极化阈值</td></tr>
+        </tbody>
+      </table>
+      <div class="sec-desc" style="margin-top:10px">数据越多 + 越接近真实分布，引擎校准越准。当前基座已支持社媒场景的 <code>content_data.json</code> 一键导入；其他场景的同类校准管道正在接入。</div>
+    </div>
+
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>准确率提升路径</div>
+      <div class="sec-desc" style="line-height:1.8">从粗到精的 4 档，对应不同数据 / 模型投入：</div>
+      <table class="bench" style="font-size:13.5px">
+        <thead><tr><th>档位</th><th>数据/模型投入</th><th>适合场景</th></tr></thead>
+        <tbody>
+          <tr><td>L0 · 拍脑袋</td><td>无数据 / 无引擎</td><td>灵感初判</td></tr>
+          <tr><td>L1 · 回顾式</td><td>content_data.json + 关键词匹配</td><td>同质化内容快速对照</td></tr>
+          <tr><td>L2 · 预测式 <b style="color:#00d4ff">← 你在这里</b></td><td>回顾式 + 多智能体仿真 + 数据基座校准</td><td>新品/活动/品类系统推演</td></tr>
+          <tr><td>L3 · 接大模型</td><td>预测式 + LLM 提取人格/聚类/语义</td><td>精细化分群运营/复杂策略</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>你现在在 L2，能再升一档吗？</div>
+      <div class="sec-desc" style="line-height:1.9">
+        <b>仅当前端（不上 LLM）能立刻提升准确率的两件事</b>：<br>
+        ① 在「<b style="color:#00d4ff">用户基座</b>」页粘贴 <code>content_data.json</code>，SOCIAL_BASE 立刻用你的真实分布校准（已支持）<br>
+        ② 把 VOC 聚类结果按 {segments:[...]} schema 导入，8 个分群的人格先验从"我手写的示例"升级为"你聚类出的真实用户"<br>
+        <br>
+        <b>升到 L3（接大模型）需要的工作</b>：<br>
+        ① 暴露一个 LLM 调用入口（Qwen / GPT-4o / Claude 之一）<br>
+        ② 把 VOC 原文 / content_data 文本送进去做聚类、情感、人格提取<br>
+        ③ 把 LLM 输出回写到 SEG_PRIOR / SOCIAL_BASE，引擎自动使用<br>
+        这套管道设计已经在仪表板的扩展点上预留，接入只需一个 <code>llmEnrichPersonas()</code> 函数。
+      </div>
     </div>
   </section>
 
