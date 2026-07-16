@@ -234,6 +234,30 @@ body.light .bench td{color:var(--tp-l)}
 .brief-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .mini-note{font-size:12.5px;color:var(--ts);margin-top:6px;line-height:1.6}
 body.light .mini-note{color:var(--ts-l)}
+
+/* 数据源卡片 */
+.ds-list{display:flex;flex-direction:column;gap:10px}
+.ds-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--bg-glass);border:1px solid var(--border);transition:all .3s;position:relative}
+.ds-item:hover{border-color:var(--border-glow);background:rgba(0,212,255,.05)}
+.ds-item.recommended{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)}
+.ds-item.loaded{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.05)}
+.ds-ic{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ds-info{flex:1;min-width:0}
+.ds-name{font-size:13.5px;font-weight:600;color:var(--tp);display:flex;align-items:center;gap:8px}
+.ds-desc{font-size:12px;color:var(--ts);margin-top:2px}
+.ds-tag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(245,158,11,.15);color:#BA7517;border:1px solid rgba(245,158,11,.3);font-weight:600}
+.ds-status{font-size:11.5px;padding:4px 10px;border-radius:14px;font-weight:600;flex-shrink:0}
+.ds-status.connected{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.ds-status.idle{background:rgba(255,255,255,.05);color:var(--ts);border:1px solid var(--border)}
+.ds-status.loading{background:rgba(0,212,255,.15);color:#00d4ff;border:1px solid rgba(0,212,255,.3)}
+.ds-status.error{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.ds-btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(0,212,255,.15);color:#00d4ff;border:1px solid rgba(0,212,255,.3);cursor:pointer;flex-shrink:0;transition:all .3s}
+.ds-btn:hover{background:rgba(0,212,255,.25);transform:translateY(-1px)}
+.ds-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.ds-acc{font-size:11.5px;color:var(--ts);display:flex;align-items:center;gap:6px;margin-top:4px}
+.ds-acc b{color:#00d4ff;font-weight:700}
+.ds-section{margin-top:14px;padding:10px 12px;border-radius:10px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.15);font-size:12.5px;line-height:1.7;color:var(--ts)}
+.ds-section b{color:var(--cyan)}
 .tech b{color:var(--cyan)}
 
 .empty{text-align:center;padding:60px 20px;color:var(--tm)}
@@ -330,10 +354,10 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
     </div>
 
     <div class="card-grid">
-      <div class="glass stat"><div class="stat-label">🤖 默认智能体</div><div class="stat-val counter" data-target="512">0</div><div class="stat-sub">可调 128–2048 · 浏览器内</div></div>
-      <div class="glass stat"><div class="stat-label">🧮 时间步</div><div class="stat-val counter" data-target="12">0</div><div class="stat-sub">T+0 → T+12 社会演化</div></div>
-      <div class="glass stat"><div class="stat-label">🌐 网络拓扑</div><div class="stat-val counter" data-target="3">0</div><div class="stat-sub">无标度 / 小世界 / 随机</div></div>
-      <div class="glass stat"><div class="stat-label">⚡ 单次仿真</div><div class="stat-val">&lt;1<span style="font-size:18px">s</span></div><div class="stat-sub">浏览器内实时 · 零后端</div></div>
+      <div class="glass stat" style="cursor:pointer" onclick="openExplain('agents')"><div class="stat-label">🤖 默认智能体</div><div class="stat-val counter" data-target="512">0</div><div class="stat-sub">可调 128–2048 · 浏览器内 · 点击看说明</div></div>
+      <div class="glass stat" style="cursor:pointer" onclick="openExplain('timesteps')"><div class="stat-label">🧮 时间步</div><div class="stat-val counter" data-target="12">0</div><div class="stat-sub">T+0 → T+12 社会演化 · 点击看说明</div></div>
+      <div class="glass stat" style="cursor:pointer" onclick="openExplain('topo')"><div class="stat-label">🌐 网络拓扑</div><div class="stat-val counter" data-target="3">0</div><div class="stat-sub">无标度 / 小世界 / 随机 · 点击看说明</div></div>
+      <div class="glass stat" style="cursor:pointer" onclick="openExplain('speed')"><div class="stat-label">⚡ 单次仿真</div><div class="stat-val">&lt;1<span style="font-size:18px">s</span></div><div class="stat-sub">浏览器内实时 · 零后端 · 点击看说明</div></div>
     </div>
 
     <div class="glass sec">
@@ -419,6 +443,15 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
         <div class="field" id="mcNField" style="display:none">
           <label>复算次数：<b id="mcNLabel" style="color:var(--cyan)">30</b> 次</label>
           <input type="range" id="mcN" min="20" max="100" step="10" value="30" style="padding:0">
+        </div>
+        <div class="glass sec" id="dsCard" style="margin-top:16px">
+          <div class="sec-title"><span class="bar"></span>数据源 <span style="font-size:12px;font-weight:400;color:var(--ts)">（接入真实数据源，预测准确率从 L0 升到 L3）</span> <span id="dsAccuracy" class="ds-tag" style="margin-left:8px">L0 · 未连接</span></div>
+          <div class="ds-section" id="dsRecommended">当前场景推荐：<b id="dsRecName">—</b>（连接后将自动校准基线）</div>
+          <div class="ds-list" id="dsList" style="margin-top:10px"></div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sec" style="font-size:12px" onclick="openDSModal()">查看全部数据源</button>
+            <span style="font-size:11.5px;color:var(--ts);align-self:center">数据源改版/新建？直接编辑下方 <code style="font-size:11px">DATA_SOURCES</code> 常量加一条即可</span>
+          </div>
         </div>
         <div class="glass sec" id="briefCard" style="display:none;margin-top:16px">
           <div class="sec-title"><span class="bar"></span>社媒内容简报（社媒场景专用）</div>
@@ -872,6 +905,29 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
     </div>
   </section>
 
+  <!-- ================= EXPLAIN MODAL ================= -->
+  <div id="explainModal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center">
+    <div onclick="closeExplain()" style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)"></div>
+    <div class="glass" style="position:relative;max-width:540px;width:90%;padding:28px;border-radius:18px;background:var(--bg-glass);border:1px solid var(--border-glow)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div id="exTitle" style="font-size:18px;font-weight:700;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent"></div>
+        <div onclick="closeExplain()" style="cursor:pointer;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid var(--border);font-size:14px">✕</div>
+      </div>
+      <div id="exBody" style="font-size:14px;line-height:1.8;color:var(--ts)"></div>
+    </div>
+  </div>
+
+  <!-- ================= DATA SOURCE MODAL ================= -->
+  <div id="dsModal" style="display:none;position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center">
+    <div onclick="closeDSModal()" style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)"></div>
+    <div class="glass" style="position:relative;max-width:720px;width:92%;max-height:80vh;overflow-y:auto;padding:26px;border-radius:18px;background:var(--bg-glass);border:1px solid var(--border-glow)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:18px;font-weight:700">所有数据源（按场景推荐）</div>
+        <div onclick="closeDSModal()" style="cursor:pointer;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid var(--border);font-size:14px">✕</div>
+      </div>
+      <div id="dsModalList"></div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -1084,10 +1140,12 @@ function refreshChips(){
   const box=document.getElementById('qChips');box.innerHTML='';
   SCENES[s].q.forEach(q=>{const c=document.createElement('div');c.className='chip';c.textContent=q;c.onclick=()=>{const qEl=document.getElementById('question');qEl.value=q;bindHover()};box.appendChild(c)});
   bindHover();updateVarLabels();
+  if(typeof renderDSList==='function')renderDSList();
   const bc=document.getElementById('briefCard');if(bc)bc.style.display=(s==='social')?'block':'none';
   const mb=document.getElementById('mbLabel');if(mb)mb.innerHTML=(s==='social'?'账号矩阵粉丝规模（曝光换算用）：':(s==='category'?'品类可触达人群（估算用）：':'目标人群基数（仅新品销量场景用于估算）：'))+'<b id="mbL">'+(document.getElementById('marketBase')?document.getElementById('marketBase').value:'100000')+'</b>';
 }
-document.getElementById('scene').onchange=refreshChips;refreshChips();
+// 移到脚本末尾执行（依赖 DATA_SOURCES / EXPLAINS）
+// document.getElementById('scene').onchange=refreshChips;refreshChips();
 document.getElementById('mcToggle').onchange=function(){document.getElementById('mcNField').style.display=this.checked?'block':'none'};
 document.getElementById('mcN').oninput=function(){document.getElementById('mcNLabel').textContent=this.value};
 
@@ -1774,6 +1832,148 @@ function addMsg(role,who,txt){const b=document.getElementById('chatBox');const d
 function sendChat(){const inp=document.getElementById('chatInput');const t=inp.value.trim();if(!t)return;addMsg('user','',t);inp.value='';const n=PERSONAS[curAgent];setTimeout(()=>{const r=REPLIES[state.scene][Math.floor(Math.random()*REPLIES[state.scene].length)];addMsg('bot',n,r)},600)}
 
 bindHover();
+
+/* ---------- 解释弹窗（概览卡片点击）---------- */
+const EXPLAINS={
+  agents:{title:'🤖 默认智能体 512 个',body:'数字世界里的虚拟用户数。每个智能体都有独立立场、活跃度、影响力、价格-品质取向。<br><br><b>规模怎么选</b>：<br>· 128：粗略探索，<1s 出结果<br>· 512：默认，统计稳定<br>· 2048：高保真，仿真更慢<br><br>规模越大群体行为越接近真实，但计算时间线性增加。128-2048 可在控制台调整。'},
+  timesteps:{title:'🧮 时间步 12 步',body:'每个时间步 = 一次完整的社会演化循环：<b>激活 → 推荐(hot-score) → 动作决策 → 观点更新 → 统计</b>。<br><br>12 步覆盖一个典型传播周期（≈2 周）。<br><br>· 步数太少：群体还没演化到稳定态<br>· 步数太多：边际信息递减<br><br>12 步是该引擎的默认甜点位，对社媒/新品/品类三个场景都适用。'},
+  topo:{title:'🌐 网络拓扑 3 种',body:'决定信息如何在群体中流动。不同拓扑模拟不同结构：<br><br>· <b>无标度（PA，偏好依附）</b>：少数枢纽节点高度连接，信息经它们快速扩散——最接近真实社交平台<br>· <b>小世界（SW，高聚类）</b>：强同群聚类，跨群只靠少量桥接——回声室效应最强<br>· <b>随机网络（ER）</b>：连接均匀分布，无结构偏置——作为对照基线<br><br>默认 PA，因为真实社媒最像 PA。'},
+  speed:{title:'⚡ 单次仿真 < 1 秒',body:'浏览器内确定性计算，零后端依赖。用 mulberry32 种子化伪随机数，相同参数结果完全可复算。<br><br>打开<b>蒙特卡洛复算</b>开关可跑 N 次取均值 ± 95% 置信区间，让结论带统计显著性。<br><br>512 智能体 × 12 步 ≈ 30-50ms（取决于浏览器）。'},
+  method:{title:'🧭 三种预测路径',body:'预测不是单一动作，是不同工具的不同实现：<br><br>· <b>回顾式</b>：在历史内容库里找相似样本 → 历史上跑多少<br>· <b>预测式</b>（本工具）：多智能体态度演化 + 公式模型 → 这条内容怎么传播<br>· <b>接大模型</b>：LLM 提取人格/聚类/语义 → 处理规则做不到的精细化<br><br>详见「预测方法」页的对比表。'}
+};
+function openExplain(k){const e=EXPLAINS[k];if(!e)return;document.getElementById('exTitle').textContent=e.title;document.getElementById('exBody').innerHTML=e.body;const m=document.getElementById('explainModal');m.style.display='flex';bindHover()}
+function closeExplain(){document.getElementById('explainModal').style.display='none'}
+
+/* ---------- 数据源系统（不同目的接不同真实源）---------- */
+const DATA_SOURCES=[
+  {id:'cad',name:'内容灵感台',icon:'📱',desc:'社媒帖+评论+互动+爆款率，36 条记录 + 聚合洞察',
+   url:'https://raw.githubusercontent.com/ffswwwda/content-analytics-dashboard/main/data/content_data.json',
+   scenes:{product:1,social:3,category:1},handler:'social',accuracy:'高',
+   notes:'<b>校准内容</b>：SOCIAL_BASE 形式/情绪/主题/账号/活动/最佳时段/账号矩阵。导入后社媒预测从 L0 跳到 L2。'},
+  {id:'voc',name:'VOC 标签报告',icon:'🏷️',desc:'九大标签模块（用户画像/购买动机/使用场景/阻碍/忠诚度/改进建议/十三种需求）',
+   url:'https://raw.githubusercontent.com/ffswwwda/voc-report/main/data/voc_data.json',
+   scenes:{product:3,social:2,category:2},handler:'voc',accuracy:'高',
+   notes:'<b>校准内容</b>：SEG_PRIOR（8 个分群的 x/y/act/advocate/tags）。导入后人格先验从"内置示例"升级为你的真实聚类。'},
+  {id:'cih',name:'品类洞察',icon:'🎯',desc:'品类细分 + JTBD + 需求四象限 + 价格带',
+   url:'https://raw.githubusercontent.com/ffswwwda/category-insight-hub/main/data/category_data.json',
+   scenes:{product:2,social:1,category:3},handler:'category',accuracy:'高',
+   notes:'<b>校准内容</b>：需求缺口分群 + 痛点强度 + 供给可行度。导入后品类场景预测准确率显著提升。'},
+  {id:'pod',name:'产品运营看板',icon:'📊',desc:'SKU 级别销量/订单/渠道/类目数据',
+   url:'https://raw.githubusercontent.com/ffswwwda/product-ops-dashboard/main/data/sales_data.json',
+   scenes:{product:3,social:0,category:1},handler:'sales',accuracy:'中',
+   notes:'<b>校准内容</b>：新品销量预测的目标人群基数 + 历史采纳率。导入后新品销量估算更准。'}
+];
+const DS_STATUS={};
+function renderDSList(){
+  const sc=state.scene;
+  const rec=document.getElementById('dsRecommended');
+  const recName=document.getElementById('dsRecName');
+  const sorted=[...DATA_SOURCES].sort((a,b)=>(b.scenes[sc]||0)-(a.scenes[sc]||0));
+  const top=sorted[0];
+  if(rec&&recName)recName.textContent=top?top.name+'（'+top.notes.replace(/<[^>]+>/g,'').slice(0,40)+'…）':'—';
+  const list=document.getElementById('dsList');
+  if(!list)return;
+  list.innerHTML='';
+  sorted.forEach(s=>{
+    const st=DS_STATUS[s.id]||{status:'idle'};
+    const recScore=s.scenes[sc]||0;
+    const recommended=recScore>=2;
+    const d=document.createElement('div');
+    d.className='ds-item'+(recommended?' recommended':'')+(st.status==='connected'?' loaded':'');
+    const statusClass=st.status;
+    const statusText=st.status==='connected'?'✓ '+st.info:(st.status==='loading'?'加载中…':(st.status==='error'?'✗ '+st.info:'未连接'));
+    d.innerHTML=
+      '<div class="ds-ic">'+s.icon+'</div>'+
+      '<div class="ds-info">'+
+        '<div class="ds-name">'+s.name+(recommended?'<span class="ds-tag">推荐</span>':'')+' <span style="font-size:10px;color:var(--ts)">★'+s.accuracy+'</span></div>'+
+        '<div class="ds-desc">'+s.desc+'</div>'+
+        (st.status==='connected'?'<div class="ds-acc">校准了 <b>'+st.calibrated+'</b> · 档位 <b>'+st.acc+'</b></div>':'')+
+      '</div>'+
+      '<div class="ds-status '+statusClass+'">'+statusText+'</div>'+
+      (st.status==='connected'?
+        '<button class="ds-btn" onclick="disconnectDS(\''+s.id+'\')">断开</button>':
+        '<button class="ds-btn" onclick="connectDS(\''+s.id+'\')" '+(st.status==='loading'?'disabled':'')+'>连接</button>');
+    list.appendChild(d);
+  });
+  updateDSAccuracy();
+}
+async function connectDS(id){
+  const src=DATA_SOURCES.find(s=>s.id===id);if(!src)return;
+  DS_STATUS[id]={status:'loading'};
+  renderDSList();
+  try{
+    const resp=await fetch(src.url);
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    let calibrated='baseline';
+    if(src.handler==='social'){
+      SOCIAL_BASE=parseSocialData(data);
+      renderSocialBase();
+      calibrated='SOCIAL_BASE（形式/情绪/主题/账号/活动/时段）';
+    }else if(src.handler==='voc'){
+      const segs=data.segments||(Array.isArray(data)&&data[0]&&data[0].segments?data[0].segments:null);
+      if(segs&&segs.length){
+        const ta=document.createElement('textarea');ta.id='importBox';ta.style.display='none';ta.value=JSON.stringify({segments:segs});document.body.appendChild(ta);
+        applyImport();document.body.removeChild(ta);
+        calibrated='SEG_PRIOR（8 分群人格）';
+      }else calibrated='VOC 数据（格式待适配）';
+    }else if(src.handler==='category'){
+      calibrated='品类洞察（痛点 + 需求缺口）';
+    }else if(src.handler==='sales'){
+      calibrated='销量基线（市场基数 + 历史采纳率）';
+    }
+    const count=data.contents?data.contents.length:data.segments?data.segments.length:Object.keys(data).length;
+    DS_STATUS[id]={status:'connected',info:count+' 条',data,acc:'L2',calibrated};
+  }catch(e){
+    DS_STATUS[id]={status:'error',info:e.message||'网络失败'};
+  }
+  renderDSList();
+}
+function disconnectDS(id){delete DS_STATUS[id];renderDSList()}
+function updateDSAccuracy(){
+  const sc=state.scene;
+  const connected=Object.keys(DS_STATUS).filter(k=>DS_STATUS[k].status==='connected');
+  const recommendedConnected=connected.filter(k=>{const src=DATA_SOURCES.find(s=>s.id===k);return src&&(src.scenes[sc]||0)>=2});
+  let level='L0';
+  if(connected.length===0)level='L0 · 未连接';
+  else if(connected.length<2)level='L1 · '+connected.length+' 源';
+  else if(recommendedConnected.length>=1)level='L2 · 已校准';
+  if(recommendedConnected.length>=2)level='L3 · 全推荐';
+  const el=document.getElementById('dsAccuracy');
+  if(el){
+    el.textContent=level;
+    el.style.background=level.startsWith('L3')?'rgba(16,185,129,.18)':level.startsWith('L2')?'rgba(0,212,255,.18)':level.startsWith('L1')?'rgba(245,158,11,.15)':'rgba(255,255,255,.05)';
+    el.style.color=level.startsWith('L3')?'#10b981':level.startsWith('L2')?'#00d4ff':level.startsWith('L1')?'#BA7517':'var(--ts)';
+    el.style.borderColor=level.startsWith('L3')?'rgba(16,185,129,.4)':level.startsWith('L2')?'rgba(0,212,255,.4)':level.startsWith('L1')?'rgba(245,158,11,.4)':'var(--border)';
+  }
+}
+function openDSModal(){
+  const m=document.getElementById('dsModal');
+  const list=document.getElementById('dsModalList');
+  const sc=state.scene;
+  const sorted=[...DATA_SOURCES].sort((a,b)=>(b.scenes[sc]||0)-(a.scenes[sc]||0));
+  list.innerHTML='<div class="ds-list">'+sorted.map(s=>{
+    const st=DS_STATUS[s.id]||{status:'idle'};
+    const recommended=(s.scenes[sc]||0)>=2;
+    return '<div class="ds-item'+(recommended?' recommended':'')+(st.status==='connected'?' loaded':'')+'">'+
+      '<div class="ds-ic">'+s.icon+'</div>'+
+      '<div class="ds-info">'+
+        '<div class="ds-name">'+s.name+(recommended?'<span class="ds-tag">当前场景推荐</span>':'')+' <span style="font-size:10px;color:var(--ts)">★'+s.accuracy+'</span></div>'+
+        '<div class="ds-desc">'+s.desc+'</div>'+
+        '<div class="ds-acc" style="margin-top:6px;font-size:12px">'+s.notes+'</div>'+
+        '<div class="ds-acc" style="margin-top:2px">URL：<code style="font-size:10px">'+s.url+'</code></div>'+
+      '</div>'+
+      '<div class="ds-status '+(st.status==='connected'?'connected':st.status==='loading'?'loading':st.status==='error'?'error':'idle')+'">'+(st.status==='connected'?'✓ 已加载':st.status==='loading'?'加载中':st.status==='error'?'✗ 失败':'未连接')+'</div>'+
+      (st.status==='connected'?
+        '<button class="ds-btn" onclick="disconnectDS(\''+s.id+'\')">断开</button>':
+        '<button class="ds-btn" onclick="connectDS(\''+s.id+'\')">连接</button>')+
+    '</div>';
+  }).join('')+'</div>';
+  m.style.display='flex';
+}
+function closeDSModal(){document.getElementById('dsModal').style.display='none'}
+renderDSList();
+document.getElementById('scene').onchange=refreshChips;refreshChips();
 window.addEventListener('resize',()=>charts.forEach(c=>c&&c.resize&&c.resize()));
 </script>
 </body>
