@@ -218,6 +218,22 @@ body.light .kpi-card{background:rgba(0,0,0,.02)}
 body.light .arch-card p{color:var(--ts-l)}
 .tech-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
 .tech{padding:8px 16px;border-radius:10px;font-size:13px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;gap:8px}
+/* 子页面返回面包屑 */
+.crumb{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ts);margin:0 0 16px;padding:7px 14px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid var(--border);cursor:pointer;transition:all .3s}
+.crumb:hover{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.3);color:var(--tp)}
+.crumb b{color:var(--cyan);font-weight:700}
+.crumb .sep{opacity:.45}
+.bench{border-collapse:collapse;width:100%;font-size:13px;margin-top:4px}
+.bench th,.bench td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left}
+.bench th{color:var(--muted,#6b7075);font-weight:600;font-size:12px}
+.bench td{color:var(--tp)}
+body.light .bench td{color:var(--tp-l)}
+.bench .hl{background:rgba(0,212,255,.1);color:var(--cyan);font-weight:700}
+.bench .good{color:#10b981;font-weight:700}.bench .bad{color:#ef4444;font-weight:700}
+.bench tr:hover td{background:rgba(0,212,255,.05)}
+.brief-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.mini-note{font-size:12.5px;color:var(--ts);margin-top:6px;line-height:1.6}
+body.light .mini-note{color:var(--ts-l)}
 .tech b{color:var(--cyan)}
 
 .empty{text-align:center;padding:60px 20px;color:var(--tm)}
@@ -402,6 +418,20 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
           <label>复算次数：<b id="mcNLabel" style="color:var(--cyan)">30</b> 次</label>
           <input type="range" id="mcN" min="20" max="100" step="10" value="30" style="padding:0">
         </div>
+        <div class="glass sec" id="briefCard" style="display:none;margin-top:16px">
+          <div class="sec-title"><span class="bar"></span>社媒内容简报（社媒场景专用）</div>
+          <div class="sec-desc">描述你计划发的这条内容，引擎会用真实社媒基准 + 上帝变量预测它的爆款率、曝光与翻车风险。</div>
+          <div class="brief-grid">
+            <div class="field"><label>内容形式</label><select id="briefForm"><option>直播切片</option><option>清单</option><option>图文</option><option>视频</option><option>其他</option></select></div>
+            <div class="field"><label>内容主题</label><select id="briefTheme"><option>平替</option><option>成分科普</option><option>赠礼</option><option>抽奖</option><option>教程</option><option>资讯转发</option><option>其他</option></select></div>
+            <div class="field"><label>情绪钩子</label><select id="briefEmo"><option>搞笑</option><option>实用</option><option>震惊</option><option>高级</option><option>共鸣</option><option>其他</option></select></div>
+            <div class="field"><label>发布账号</label><select id="briefAuthor"><option>品牌官方</option><option>种草官</option><option>副线</option><option>其他</option></select></div>
+          </div>
+          <div class="field mc-row" style="margin-top:12px">
+            <label class="mc-label"><span>绑定活动节点</span><span class="mc-hint">活动期爆款率抬升</span></label>
+            <label class="switch"><input type="checkbox" id="briefActivity"><span class="slider-sw"></span></label>
+          </div>
+        </div>
         <button class="btn btn-primary" id="runBtn" style="width:100%" onclick="runSim()">⚡ 构建数字世界并推演</button>
       </div>
 
@@ -424,6 +454,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 
   <!-- ================= WORLD ================= -->
   <section class="page" id="page-world">
+    <div class="crumb" onclick="go('console')">← <b>预测工作台</b><span class="sep">/</span>数字世界</div>
     <div class="page-head">
       <h1 class="page-title">数字世界 <span class="badge" id="worldTag">未生成</span></h1>
       <p class="page-sub">这是引擎为你的种子信息构建的平行社会。每个节点是一个拥有独立人格的智能体，连线是它们之间的社会关系。以"上帝视角"注入变量，观察群体演化。</p>
@@ -482,6 +513,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 
   <!-- ================= REPORT ================= -->
   <section class="page" id="page-report">
+    <div class="crumb" onclick="go('console')">← <b>预测工作台</b><span class="sep">/</span>预测报告</div>
     <div class="page-head">
       <h1 class="page-title">预测报告</h1>
       <p class="page-sub">ReportAgent 携带完整工具集，与仿真后的数字世界深度交互，产出结构化预测。你还能在下方直接与世界中的智能体对话。</p>
@@ -502,7 +534,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
         </div>
 
         <div class="field" style="max-width:340px;margin-bottom:16px">
-          <label>目标人群基数（仅新品销量场景用于估算）：<b id="mbL">100000</b></label>
+          <label id="mbLabel">目标人群基数（仅新品销量场景用于估算）：<b id="mbL">100000</b></label>
           <input type="number" id="marketBase" value="100000" min="1" oninput="document.getElementById('mbL').textContent=this.value;if(state.done)drawReport()">
         </div>
 
@@ -512,6 +544,8 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
           <div class="sec-title"><span class="bar"></span><span id="scenarioChartTitle">场景核心指标</span></div>
           <div id="scenarioChart" class="chart" style="height:300px"></div>
         </div>
+
+        <div id="socialBench" style="margin-bottom:24px"></div>
 
         <div class="two-col" style="margin-bottom:24px">
           <div id="probChart" class="chart-sm"></div>
@@ -547,6 +581,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 
   <!-- ================= ALGO ================= -->
   <section class="page" id="page-algo">
+    <div class="crumb" onclick="go('console')">← <b>预测工作台</b><span class="sep">/</span>算法引擎</div>
     <div class="page-head">
       <h1 class="page-title">算法引擎 <span class="badge" id="algoTag">未运行</span></h1>
       <p class="page-sub">这一页把 MiroFish / OASIS 的仿真机制真正落到了代码里。下面的每一条数据都来自一个在你浏览器里逐时间步运行的多智能体模型（Agent-Based Model）——大模型负责的"自然语言生成"用规则化决策策略替代，但激活、推荐、动作决策、观点演化、记忆更新这一整套算法骨架是完整、可复算的。</p>
@@ -636,6 +671,7 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
   <!-- ================= ARCH ================= -->
   <!-- ================= BASE ================= -->
   <section class="page" id="page-base">
+    <div class="crumb" onclick="go('console')">← <b>预测工作台</b><span class="sep">/</span>用户基座</div>
     <div class="page-head">
       <h1 class="page-title">用户基座 <span class="badge">8 分群</span></h1>
       <p class="page-sub">这是仿真的人格来源。每个智能体不是一个虚构角色，而是从你的用户研究体系中聚类出来的真实用户分群——态度、活跃度、忠诚度、价格—品质取向，全部来自 VOC 语料与标签体系。引擎直接读取这张表。</p>
@@ -695,9 +731,22 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
         </div>
       </div>
     </div>
+
+    <div class="glass sec" style="margin-top:20px">
+      <div class="sec-title"><span class="bar"></span>社媒真实数据基座（content-analytics-dashboard）</div>
+      <div class="sec-desc">当场景选「社媒活动预测」时，引擎会用这里的真实社媒基准来标定预测——爆款率、互动率、账号矩阵、最佳发布时间、活动提升系数。默认已内置 insights.json 的真实聚合值；把你的 <code style="font-size:12px">content_data.json</code> 原样粘贴进来，前端会自动重算全部基准（无需大模型）。</div>
+      <textarea id="socialImportBox" class="field" style="width:100%;height:90px;font-family:monospace;font-size:12px;color:var(--tp)" placeholder='粘贴 content_data.json 全文，或只粘贴 {contents:[...]} 数组'></textarea>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="applySocialImport()">从内容数据重算基准</button>
+        <button class="btn" onclick="resetSocialBase()">恢复内置基准</button>
+        <span id="socialImportMsg" style="font-size:12px;color:var(--cyan)"></span>
+      </div>
+      <div id="socialBaseView" style="margin-top:14px"></div>
+    </div>
   </section>
 
   <section class="page" id="page-arch">
+    <div class="crumb" onclick="go('console')">← <b>预测工作台</b><span class="sep">/</span>架构说明</div>
     <div class="page-head">
       <h1 class="page-title">架构说明</h1>
       <p class="page-sub">MiroFish 构建于 CAMEL-AI 开源的 OASIS 社会仿真引擎之上，融合 GraphRAG 图谱与 Zep 长期记忆，形成完整的"提取 → 建模 → 演化 → 报告 → 交互"闭环。</p>
@@ -844,12 +893,76 @@ const TOPOS={
   er:{name:'随机网络',desc:'连接均匀分布、无结构偏置，作为对照基线'}
 };
 
+/* ---------- 社媒真实数据基座（content-analytics-dashboard） ---------- */
+// 默认用 insights.json 的真实聚合值。导入 content_data.json 后由 parseSocialData 自动重算。
+const SOCIAL_DEFAULT={
+  avgViral:62, repostBaseline:0.20, engagementBaseline:0.066,
+  contentTypes:{ // 形式 → 爆款率 / 互动率
+    '清单':{viral:67,eng:0.066},'直播切片':{viral:77,eng:0.0695},'图文':{viral:72,eng:0.066},
+    '视频':{viral:60,eng:0.0566},'其他':{viral:55,eng:0.05}},
+  emotions:{ // 情绪 → 爆款率
+    '搞笑':72,'实用':75,'震惊':75,'高级':60,'共鸣':53,'其他':60},
+  themes:{ // 主题 → 爆款率
+    '平替':67,'成分科普':70,'赠礼':72,'抽奖':70,'教程':65,'资讯转发':45,'其他':60},
+  authorTypes:{ // 账号类型 → 影响力放大系数 / 占比
+    '品牌官方':{infl:1.0,share:0.55},'种草官':{infl:0.6,share:0.25},'副线':{infl:0.4,share:0.20},'其他':{infl:0.5,share:0.0}},
+  activityLift:1.8, // 活动期爆款率抬升系数
+  bestHours:[12,20,21], bestDays:['周三','周五','周日'],
+  topAccounts:[{name:'品牌主号',viral:85,share:0.55},{name:'种草官号',viral:55,share:0.25},{name:'副线号',viral:40,share:0.20}],
+  followers:500000 // 账号矩阵粉丝规模（曝光换算用，控制台可调）
+};
+let SOCIAL_BASE=JSON.parse(JSON.stringify(SOCIAL_DEFAULT));
+// 从 content_data.json（{meta,contents:[...]} 或纯数组）自动派生全部基准
+function parseSocialData(raw){
+  const arr=(raw&&raw.contents)?raw.contents:(Array.isArray(raw)?raw:null);
+  if(!arr||!arr.length)throw new Error('未找到 contents 数组');
+  const viral=arr.map(r=>+r.viral_score||0);
+  const avgViral=meanOf(viral);
+  const acc={}; // group helper
+  const grp=(keyFn,valKey)=>{const m={};arr.forEach(r=>{const k=keyFn(r);if(k==null||k==='')return;(m[k]||(m[k]={n:0,v:0,e:0}));m[k].n++;m[k].v+=+r[valKey]||0;m[k].e+=+r.composite_rate||0});return m};
+  const ct=grp(r=>r.content_type||'其他','viral_score');const contentTypes={};Object.keys(ct).forEach(k=>contentTypes[k]={viral:Math.round(ct[k].v/ct[k].n),eng:+(ct[k].e/ct[k].n/100).toFixed(4)});
+  const em=grp(r=>r.emotion_style||r.emotion||'其他','viral_score');const emotions={};Object.keys(em).forEach(k=>emotions[k]=Math.round(em[k].v/em[k].n));
+  const th={};arr.forEach(r=>{(r.topic_tags||[]).concat(r.content_topic?[r.content_topic]:[]).forEach(t=>{if(!t)return;(th[t]||(th[t]={n:0,v:0}));th[t].n++;th[t].v+=+r.viral_score||0})});const themes={};Object.keys(th).forEach(k=>themes[k]=Math.round(th[k].v/th[k].n));
+  const au=grp(r=>r.author_type||'其他','viral_score');const authorTypes={};let total=arr.length;Object.keys(au).forEach(k=>authorTypes[k]={infl:+(au[k].v/au[k].n/Math.max(1,avgViral)).toFixed(2),share:+(au[k].n/total).toFixed(2)});
+  const act=arr.filter(r=>r.is_activity).map(r=>+r.viral_score||0);const non=arr.filter(r=>!r.is_activity).map(r=>+r.viral_score||0);
+  const activityLift=(meanOf(non)>0)?+(meanOf(act)/meanOf(non)).toFixed(2):1.5;
+  const hours={};arr.forEach(r=>{const h=(r.publish_time||'').slice(11,13);if(h&&/^\d\d$/.test(h)){const w=+r.viral_score||0;(hours[h]||(hours[h]={w:0,c:0}));hours[h].w+=w;hours[h].c++}});
+  const bestHours=Object.keys(hours).map(h=>({h:+h,v:hours[h].w/hours[h].c})).sort((a,b)=>b.v-a.v).slice(0,3).map(o=>o.h);
+  const topAccounts=Object.keys(au).map(k=>({name:k,viral:Math.round(au[k].v/au[k].n),share:+(au[k].n/total).toFixed(2)})).sort((a,b)=>b.viral-a.viral).slice(0,5);
+  return {avgViral:Math.round(avgViral),repostBaseline:+(meanOf(arr.map(r=>+r.repost_rate||0))/100).toFixed(3),engagementBaseline:+(meanOf(arr.map(r=>+r.composite_rate||0))/100).toFixed(4),contentTypes,emotions,themes,authorTypes,activityLift,bestHours,bestDays:SOCIAL_DEFAULT.bestDays,topAccounts,followers:SOCIAL_BASE.followers};
+}
+function applySocialImport(){
+  const m=document.getElementById('socialImportMsg');if(!m)return;
+  try{
+    const o=JSON.parse(document.getElementById('socialImportBox').value);
+    SOCIAL_BASE=parseSocialData(o);renderSocialBase();
+    m.style.color='var(--green)';m.textContent='已用 '+ (o.contents?o.contents.length:(Array.isArray(o)?o.length:0)) +' 条内容重算社媒基准，将驱动社媒场景预测';
+  }catch(e){m.style.color='var(--red)';m.textContent='导入失败：'+e.message}
+}
+function resetSocialBase(){SOCIAL_BASE=JSON.parse(JSON.stringify(SOCIAL_DEFAULT));renderSocialBase();const m=document.getElementById('socialImportMsg');if(m){m.style.color='var(--cyan)';m.textContent='已恢复内置基准（insights.json 聚合值）'}}
+function renderSocialBase(){
+  const el=document.getElementById('socialBaseView');if(!el)return;
+  const b=SOCIAL_BASE;
+  const ctRows=Object.keys(b.contentTypes).map(k=>`<tr><td>${k}</td><td class="hl">${b.contentTypes[k].viral}</td><td>${(b.contentTypes[k].eng*100).toFixed(2)}%</td></tr>`).join('');
+  const emRows=Object.keys(b.emotions).map(k=>`<tr><td>${k}</td><td class="hl">${b.emotions[k]}</td></tr>`).join('');
+  const auRows=Object.keys(b.authorTypes).map(k=>`<tr><td>${k}</td><td class="hl">×${b.authorTypes[k].infl}</td><td>${(b.authorTypes[k].share*100).toFixed(0)}%</td></tr>`).join('');
+  el.innerHTML=`<div class="mini-note">全站平均爆款率 <b style="color:var(--cyan)">${b.avgViral}</b> · 活动期提升 ×${b.activityLift} · 账号矩阵粉丝 ${b.followers.toLocaleString()} · 最佳时段 ${b.bestHours.map(h=>h+':00').join('/')}</div>
+  <div class="brief-grid" style="margin-top:12px">
+    <div><div class="sec-title" style="margin-bottom:6px"><span class="bar"></span>形式 × 爆款率 / 互动率</div><table class="bench"><thead><tr><th>形式</th><th>爆款率</th><th>互动率</th></tr></thead><tbody>${ctRows}</tbody></table></div>
+    <div><div class="sec-title" style="margin-bottom:6px"><span class="bar"></span>情绪 × 爆款率</div><table class="bench"><thead><tr><th>情绪</th><th>爆款率</th></tr></thead><tbody>${emRows}</tbody></table></div>
+    <div style="grid-column:1/3"><div class="sec-title" style="margin-bottom:6px"><span class="bar"></span>账号类型 × 影响力放大 / 占比</div><table class="bench"><thead><tr><th>账号类型</th><th>影响力放大</th><th>占比</th></tr></thead><tbody>${auRows}</tbody></table></div>
+  </div>`;
+}
+
 /* ---------- state ---------- */
 const state={done:false,pop:512,edges:0,scene:'product',mood:'',graphData:null,tick:12,engine:null,T:12,topo:'pa',mc:false,mcN:30};
 
 document.getElementById('pop').oninput=function(){document.getElementById('popLabel').textContent=this.value};
 function updateVarLabels(){const lab=VARS_LABEL[state.scene]||VARS_LABEL.product;document.getElementById('v1name').textContent=lab.v1;document.getElementById('v2name').textContent=lab.v2;document.getElementById('v3name').textContent=lab.v3}
-function refreshChips(){const s=document.getElementById('scene').value;state.scene=s;const box=document.getElementById('qChips');box.innerHTML='';SCENES[s].q.forEach(q=>{const c=document.createElement('div');c.className='chip';c.textContent=q;c.onclick=()=>{document.getElementById('question').value=q;bindHover()};box.appendChild(c)});bindHover();updateVarLabels()}
+function refreshChips(){const s=document.getElementById('scene').value;state.scene=s;const box=document.getElementById('qChips');box.innerHTML='';SCENES[s].q.forEach(q=>{const c=document.createElement('div');c.className='chip';c.textContent=q;c.onclick=()=>{document.getElementById('question').value=q;bindHover()};box.appendChild(c)});bindHover();updateVarLabels();
+  const bc=document.getElementById('briefCard');if(bc)bc.style.display=(s==='social')?'block':'none';
+  const mb=document.getElementById('mbLabel');if(mb)mb.innerHTML=(s==='social'?'账号矩阵粉丝规模（曝光换算用）：':(s==='category'?'品类可触达人群（估算用）：':'目标人群基数（仅新品销量场景用于估算）：'))+'<b id="mbL">'+(document.getElementById('marketBase')?document.getElementById('marketBase').value:'100000')+'</b>';
+}
 document.getElementById('scene').onchange=refreshChips;refreshChips();
 document.getElementById('mcToggle').onchange=function(){document.getElementById('mcNField').style.display=this.checked?'block':'none'};
 document.getElementById('mcN').oninput=function(){document.getElementById('mcNLabel').textContent=this.value};
@@ -1039,6 +1152,42 @@ const ENGINE={
 };
 
 /* ---------- 场景化指标提取：把"态度演化"映射为各场景真正关心的结果 ---------- */
+/* ---------- 社媒场景：内容简报 + 真实基准预测 ---------- */
+function getBrief(){
+  const g=id=>document.getElementById(id);
+  return {
+    form:(g('briefForm')?g('briefForm').value:'直播切片'),
+    theme:(g('briefTheme')?g('briefTheme').value:'平替'),
+    emo:(g('briefEmo')?g('briefEmo').value:'搞笑'),
+    author:(g('briefAuthor')?g('briefAuthor').value:'品牌官方'),
+    activity:(g('briefActivity')?g('briefActivity').checked:false),
+    v1:+(g('v1').value)/100, v2:+(g('v2').value)/100, v3:+(g('v3').value)/100
+  };
+}
+function fmtK(n){n=Math.round(n);if(n>=1e6)return (n/1e6).toFixed(1)+'M';if(n>=1e3)return (n/1e3).toFixed(0)+'K';return ''+n}
+// 预测爆款率：真实数据基准（形式/主题/情绪/账号）× 上帝变量 × 活动系数
+function predictViral(b){
+  const formR=(SOCIAL_BASE.contentTypes[b.form]||{viral:SOCIAL_BASE.avgViral}).viral;
+  const emoR=SOCIAL_BASE.emotions[b.emo]||SOCIAL_BASE.avgViral;
+  const themeR=SOCIAL_BASE.themes[b.theme]||SOCIAL_BASE.avgViral;
+  const authMul=(SOCIAL_BASE.authorTypes[b.author]||{infl:0.5}).infl;
+  let rate=0.4*formR+0.3*emoR+0.3*themeR;
+  rate*=authMul;
+  rate*=(1+0.6*b.v1);                       // 内容契合度
+  rate*=(1+0.4*b.v2);                       // 互动/激励力度
+  rate*=(1+0.8*b.v3*Math.max(0,authMul-0.4)); // KOL 投放（高影响力账号放大更明显）
+  if(b.activity)rate*=SOCIAL_BASE.activityLift;
+  return clip(Math.round(rate),0,100);
+}
+function predictExposure(reachPct,b){
+  const followers=Math.max(1,+(document.getElementById('marketBase')?document.getElementById('marketBase').value:SOCIAL_BASE.followers)||SOCIAL_BASE.followers);
+  SOCIAL_BASE.followers=followers;
+  let expo=reachPct/100*followers;
+  expo*=(1+1.2*b.v3*((SOCIAL_BASE.authorTypes[b.author]||{infl:0.5}).infl)); // KOL 放大曝光
+  if(b.activity)expo*=SOCIAL_BASE.activityLift;
+  return {lo:Math.round(expo*0.8),hi:Math.round(expo*1.25),mid:Math.round(expo)};
+}
+
 function computeMetrics(scene){
   const e=state.engine;if(!e)return null;
   const ags=e.agents||ENGINE.lastAgents||[];const N=ags.length||1;const T=state.T;
@@ -1098,19 +1247,28 @@ function computeMetrics(scene){
     ];
     out.summary=`基于 ${N} 个智能体推演，该品类机会的净推荐值 NPS=${nps>0?'+':''}${nps}，差评风险指数 ${risk}，预计口碑评分 ${rating}/5。${pains.length?('需优先解决：'+pains.join('、')+'。'):'负面先验分群已被有效拉升。'}`;
   }else{
+    const b=getBrief();
+    const viral=predictViral(b);
+    const expo=predictExposure(reachPct,b);
+    const formBench=SOCIAL_BASE.contentTypes[b.form]||{viral:SOCIAL_BASE.avgViral,eng:0.05};
+    const emoBench=SOCIAL_BASE.emotions[b.emo]||SOCIAL_BASE.avgViral;
+    const authMul=(SOCIAL_BASE.authorTypes[b.author]||{infl:0.5}).infl;
     out.kpis=[
-      {label:'触达率',value:reachPct.toFixed(0)+'%',sub:`${reachFinal} / ${N} 个智能体`,tone:reachPct>0.6?'good':reachPct>0.3?'warn':'bad'},
-      {label:'转发放大比',value:K.toFixed(2),sub:'转发数 / 发帖数',tone:K>=1?'good':K>=0.5?'warn':'bad'},
-      {label:'KOL 贡献占比',value:(kolShare*100).toFixed(0)+'%',sub:'达人触发转发比例',tone:kolShare>0.3?'good':'warn'},
-      {label:'人均互动(全程)',value:engRate.toFixed(1)+' 次',sub:'总互动 / 触达人数',tone:'neutral'}
+      {label:'预测爆款率',value:viral+'%',sub:'计划 vs 均值 '+SOCIAL_BASE.avgViral+'%',tone:viral>=SOCIAL_BASE.avgViral*1.15?'good':viral>=SOCIAL_BASE.avgViral*0.85?'warn':'bad'},
+      {label:'预计曝光(区间)',value:fmtK(expo.lo)+'~'+fmtK(expo.hi),sub:'矩阵 '+fmtK(SOCIAL_BASE.followers)+' 粉丝',tone:'neutral'},
+      {label:'累计触达率',value:reachPct.toFixed(0)+'%',sub:reachFinal+'/'+N+' 智能体',tone:reachPct>0.6?'good':reachPct>0.3?'warn':'bad'},
+      {label:'转发系数 K',value:K.toFixed(2),sub:'转发/发帖',tone:K>=1?'good':K>=0.5?'warn':'bad'}
     ];
     out.chartType='reach';out.chartData={reach:e.reach||[],reachLo:e.reachLo,reachHi:e.reachHi,T,heat};
+    out.brief=b;
     out.findings=[
-      ['传播量级',`终态触达 ${reachPct.toFixed(0)}% 的智能体，病毒系数 K=${K.toFixed(2)}（${K>=1?'具备自传播能力':'依赖持续投放'}）。`],
-      ['KOL 角色',`达人节点贡献了 ${(kolShare*100).toFixed(0)}% 的转发，是跨群桥接与放大的关键。`],
-      ['生命周期',`${burnout}。`]
+      ['爆款率诊断','计划「'+b.form+'/'+b.theme+'/'+b.emo+'」由'+b.author+'发布，预测爆款率 '+viral+'%（全站均值 '+SOCIAL_BASE.avgViral+'%）。形式基准 '+formBench.viral+'%、情绪基准 '+emoBench+'%。'+(viral>=SOCIAL_BASE.avgViral?'高于均值，选题契合度高，可放量':'低于均值，需优化形式/主题/情绪或加大投放')+'。'],
+      ['账号矩阵',b.author+'影响力放大 ×'+authMul+'；当前矩阵品牌主号占 '+((SOCIAL_BASE.authorTypes['品牌官方']||{share:0.5}).share*100).toFixed(0)+'%，副线/种草官号产出偏弱，建议分流。'],
+      ['传播量级','终态触达 '+reachPct.toFixed(0)+'%，K='+K.toFixed(2)+'（'+(K>=1?'具自传播':'依赖投放')+'）；互动峰值 '+burnout+'。'],
+      ['翻车风险',negPct>25?'终态负面 '+negPct+'%，偏高——差评传播者易在弱监测处引爆二次舆情，建议前置埋点。':'终态负面 '+negPct+'%，风险可控；活动期仍建议实时监测。']
     ];
-    out.summary=`基于 ${N} 个智能体推演，该内容终态触达率 ${reachPct.toFixed(0)}%、转发放大比 K=${K.toFixed(2)}、KOL 贡献 ${(kolShare*100).toFixed(0)}% 转发。${K>=1?'内容转发大于发帖、正反馈强，可适度收投放':`K<1，需持续投放维持声量`}；互动峰值出现在 ${burnout}。`;
+    out.bench={form:b.form,formV:formBench.viral,emo:b.emo,emoV:emoBench,theme:b.theme,themeV:SOCIAL_BASE.themes[b.theme]||SOCIAL_BASE.avgViral,author:b.author,authMul,bestHours:SOCIAL_BASE.bestHours,activity:b.activity,activityLift:SOCIAL_BASE.activityLift,topAccounts:SOCIAL_BASE.topAccounts};
+    out.summary='基于 '+N+' 个智能体 + 真实社媒基准推演：计划内容预测爆款率 '+viral+'%（全站均值 '+SOCIAL_BASE.avgViral+'%），预计曝光 '+fmtK(expo.lo)+'~'+fmtK(expo.hi)+'；终态触达 '+reachPct.toFixed(0)+'%、转发系数 K='+K.toFixed(2)+'。'+(b.activity?'活动节点优选，爆款率额外 ×'+SOCIAL_BASE.activityLift+'。':'')+(viral>=SOCIAL_BASE.avgViral?'选题契合度良好，可放量。':'建议优化内容形式/主题/情绪或加大 KOL 投放后再放量。');
   }
   return out;
 }
@@ -1322,6 +1480,28 @@ function drawReport(){
   // 场景专属图表
   document.getElementById('scenarioChartTitle').textContent={product:'新品采纳曲线（累计采纳率 %）',social:'社媒触达曲线（累计触达 %）+ 互动热度',category:'口碑结构：推荐者 / 中立 / 贬损者'}[state.scene]||'场景核心指标';
   drawScenarioChart(M);
+  // 社媒基准对比表（仅社媒场景渲染）
+  const sb=document.getElementById('socialBench');
+  if(state.scene==='social'&&M&&M.bench){
+    const b=M.bench;
+    sb.style.display='block';
+    sb.innerHTML=
+      '<div class="glass sec" style="margin-bottom:0"><div class="sec-title"><span class="bar"></span>基准对比 · 计划内容 vs 真实社媒基准</div>'+
+      '<table class="bench"><thead><tr><th>维度</th><th>计划</th><th>基准爆款率</th><th>评估</th></tr></thead><tbody>'+
+      '<tr><td>内容形式</td><td>'+b.form+'</td><td class="hl">'+b.formV+'%</td><td class="'+(b.formV>=SOCIAL_BASE.avgViral?'good':'bad')+'">'+(b.formV>=SOCIAL_BASE.avgViral?'≥均值 ✓':'<均值 ⚠')+'</td></tr>'+
+      '<tr><td>情绪钩子</td><td>'+b.emo+'</td><td class="hl">'+b.emoV+'%</td><td class="'+(b.emoV>=SOCIAL_BASE.avgViral?'good':'bad')+'">'+(b.emoV>=SOCIAL_BASE.avgViral?'≥均值 ✓':'<均值 ⚠')+'</td></tr>'+
+      '<tr><td>主题</td><td>'+b.theme+'</td><td class="hl">'+b.themeV+'%</td><td class="'+(b.themeV>=SOCIAL_BASE.avgViral?'good':'bad')+'">'+(b.themeV>=SOCIAL_BASE.avgViral?'≥均值 ✓':'<均值 ⚠')+'</td></tr>'+
+      '<tr><td>账号类型</td><td>'+b.author+'</td><td class="hl">×'+b.authMul+'</td><td>'+(+b.authMul>=0.6?'放大效应强 ✓':'放大偏弱 ⚠')+'</td></tr>'+
+      '<tr><td>绑定活动</td><td>'+(b.activity?'是':'否')+'</td><td class="hl">×'+(b.activity?b.activityLift:'1.0')+'</td><td>'+(b.activity?'活动期抬升明显 ✓':'无活动加成')+'</td></tr>'+
+      '<tr><td>最佳发帖时段</td><td colspan="3">'+(b.bestHours&&b.bestHours.length?b.bestHours.map(h=>h+':00').join(' / '):'—')+'</td></tr>'+
+      '</tbody></table>';
+    // 账号矩阵
+    if(b.topAccounts)sb.innerHTML+=
+      '<div class="mini-note" style="margin-top:12px"><b>账号矩阵爆款表现：</b>'+
+      b.topAccounts.map(a=>a.name+'（'+a.viral+'%'+(a.share?'，占 '+Math.round(a.share*100)+'%':'' )+'）').join(' → ')+
+      '</div>';
+    sb.innerHTML+='</div>';
+  }else{sb.style.display='none'}
   // 路径概率
   const probs=pathProbs().sort((a,b)=>b[1]-a[1]);
   const top=probs[0];
