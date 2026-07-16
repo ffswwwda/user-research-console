@@ -773,7 +773,7 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
     <div class="glass sec" style="margin-top:20px">
       <div class="sec-title"><span class="bar"></span>社媒真实数据基座（content-analytics-dashboard）</div>
       <div class="sec-desc">当场景选「社媒活动预测」时，引擎会用这里的真实社媒基准来标定预测——爆款率、互动率、账号矩阵、最佳发布时间、活动提升系数。默认已内置 insights.json 的真实聚合值；把你的 <code style="font-size:12px">content_data.json</code> 原样粘贴进来，前端会自动重算全部基准（无需大模型）。</div>
-      <textarea id="socialImportBox" class="field" style="width:100%;height:90px;font-family:monospace;font-size:12px;color:var(--tp)" placeholder='粘贴 content_data.json 全文，或只粘贴 {contents:[...]} 数组'></textarea>
+      <textarea id="socialImportBox" class="field" style="width:100%;height:90px;font-family:monospace;font-size:12px;color:var(--tp)" placeholder='粘贴 content_data.json 全文，或只粘贴 {contents:[...]} 数组；或粘贴领先用户数据 {leadUsers:[{need,category,first_seen,frequency,intensity,workaround,tags}]}'></textarea>
       <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="applySocialImport()">从内容数据重算基准</button>
         <button class="btn" onclick="resetSocialBase()">恢复内置基准</button>
@@ -1188,6 +1188,33 @@ function parseInnovationData(raw){
   if(!arr||!arr.length)throw new Error('未找到产品数据');
   const total=arr.length;
   return {avgInnovation:Math.max(10,100-Math.round(total*0.15)),competitionGap:+(1-Math.min(1,total/200)).toFixed(2),knownSolutions:total};
+}
+// 解析领先用户记录：{leadUsers:[{need,category,first_seen,frequency,intensity,workaround,tags}]}
+// 或老格式 {records:[...]}
+function parseLeadUserData(raw){
+  const arr=(raw&&raw.leadUsers)?raw.leadUsers:(raw&&raw.records?raw.records:(Array.isArray(raw)?raw:null));
+  if(!arr||!arr.length)throw new Error('未找到 leadUsers 数组');
+  const now=new Date();
+  let avgValidation=0.5,avgIntensity=0.5,leadUserTime=0,totalFreq=0,workaroundCount=0;
+  let oldestMonths=0;
+  arr.forEach(r=>{
+    const intensity=+r.intensity||0.5; avgIntensity=(avgIntensity+intensity)/2;
+    const freq=+r.frequency||1; totalFreq+=freq;
+    if(r.workaround)workaroundCount++;
+    if(r.first_seen){
+      const m=String(r.first_seen).match(/(\d{4})[-/](\d{1,2})?/);
+      if(m){
+        const d=new Date(+m[1],(+(m[2]||1))-1,1);
+        const months=Math.max(0,(now.getFullYear()-d.getFullYear())*12+(now.getMonth()-d.getMonth()));
+        if(months>oldestMonths)oldestMonths=months;
+      }
+    }
+  });
+  leadUserTime=oldestMonths; // 用最早记录距今月数作"前瞻性"
+  avgValidation=Math.min(1,0.3+totalFreq/30); // 总频次越高，验证度越高
+  avgIntensity=Math.min(1,avgIntensity);
+  const records=arr.map(r=>({need:r.need||r.problem||r.text,category:r.category||r.cat,first_seen:r.first_seen,intensity:+r.intensity||0,frequency:+r.frequency||1,workaround:!!r.workaround,tags:r.tags||[]}));
+  return {avgInnovation:INNOVATION_BASE.avgInnovation,avgValidation,marketReadiness:Math.min(1,oldestMonths/24),competitionGap:INNOVATION_BASE.competitionGap,knownSolutions:INNOVATION_BASE.knownSolutions,needIntensity:avgIntensity,leadUserTime,needFrequency:Math.min(1,workaroundCount/arr.length),leadUserRecords:records};
 }
 
 /* ---------- state ---------- */
@@ -1955,7 +1982,15 @@ const DATA_SOURCES=[
   {id:'hub',name:'品类洞察（全量产品）',icon:'🎯',desc:'248 条产品数据 + 类目/价格/评分/竞品分析',
    url:'https://raw.githubusercontent.com/ffswwwda/category-insight-hub/main/de_records.json',
    scenes:{product:2,social:1,category:2,innovation:3},handler:'innovation',accuracy:'高',
-   notes:'<b>校准内容</b>：INNOVATION_BASE 竞争缺口/已知解决方案/品类分布。导入后新品创意预测的创意度/可行性显著提升。'}
+   notes:'<b>校准内容</b>：INNOVATION_BASE 竞争缺口/已知解决方案/品类分布。导入后新品创意预测的创意度/可行性显著提升。'},
+  {id:'lead',name:'领先用户反馈专区',icon:'🌟',desc:'领先用户表达的需求/痛点/JTBD，含时间维度（首次表达月份）与强度',
+   url:'https://raw.githubusercontent.com/ffswwwda/category-insight-hub/main/lead_user_records.json',
+   scenes:{product:1,social:0,category:2,innovation:3},handler:'lead',accuracy:'高',
+   notes:'<b>校准内容</b>：INNOVATION_BASE 的需求验证度/前瞻性/需求强度（从领先用户记录时间轴推导）。需要把领先用户数据导出为 lead_user_records.json 上传到此 URL。'},
+  {id:'leadFallback',name:'领先用户反馈（手动粘贴）',icon:'🌟',desc:'没有远程文件时，直接粘贴 JSON 到下方文本框',
+   url:null,
+   scenes:{product:1,social:0,category:2,innovation:3},handler:'lead',accuracy:'中',
+   notes:'<b>校准内容</b>：与上面数据源相同，只是用粘贴方式。Schema：{leadUsers:[{need,category,first_seen,frequency,intensity,workaround,tags}]}'}
 ];
 const DS_STATUS={};
 function renderDSList(){
@@ -1996,9 +2031,12 @@ async function connectDS(id){
   DS_STATUS[id]={status:'loading'};
   renderDSList();
   try{
-    const resp=await fetch(src.url);
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    const data=await resp.json();
+    let data=null;
+    if(src.url){
+      const resp=await fetch(src.url);
+      if(!resp.ok)throw new Error('HTTP '+resp.status);
+      data=await resp.json();
+    }
     let calibrated='baseline';
     if(src.handler==='social'){
       SOCIAL_BASE=parseSocialData(data);
@@ -2018,6 +2056,18 @@ async function connectDS(id){
     }else if(src.handler==='innovation'){
       INNOVATION_BASE=parseInnovationData(data);
       calibrated='INNOVATION_BASE（竞品缺口 + 已知 solution + 品类分布）';
+    }else if(src.handler==='lead'){
+      if(!src.url){
+        // 手动粘贴模式：从 socialImportBox 读
+        const box=document.getElementById('socialImportBox');
+        if(!box||!box.value.trim())throw new Error('请在数据源下方文本框粘贴 lead_user_records.json');
+        const pasted=JSON.parse(box.value);
+        INNOVATION_BASE=parseLeadUserData(pasted);
+        calibrated='INNOVATION_BASE（领先用户 '+pasted.leadUsers?pasted.leadUsers.length:(Array.isArray(pasted)?pasted.length:0)+' 条·需求验证/前瞻性/强度）';
+      }else{
+        INNOVATION_BASE=parseLeadUserData(data);
+        calibrated='INNOVATION_BASE（领先用户 '+data.leadUsers?data.leadUsers.length:data.length+' 条·需求验证/前瞻性/强度）';
+      }
     }
     const count=data.contents?data.contents.length:data.segments?data.segments.length:Object.keys(data).length;
     DS_STATUS[id]={status:'connected',info:count+' 条',data,acc:'L2',calibrated};
