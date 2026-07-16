@@ -415,6 +415,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
             <option value="product">新品上市预测 · 首发转化、口碑与用户反馈</option>
             <option value="social">社媒活动预测 · 内容传播效果与翻车风险</option>
             <option value="category">品类机会预测 · 需求缺口与切入排序</option>
+            <option value="innovation">新品创意预测 · 创意可行性验证与市场时机</option>
           </select>
         </div>
         <div class="field">
@@ -1044,7 +1045,11 @@ const SCENES={
   category:{q:['这个品类机会点是否成立？','哪类需求最值得切入？','现有品类结构该怎么优化？'],mood:'机会',title:'品类机会：未被满足的需求 + 高忠诚人群重合度决定机会大小',
     findings:[['机会识别','需求缺口最大的分群规模可观，对应机会值得切入'],['人群匹配','品质党与痛点击中者的需求重合度高，是优先人群'],['结构优化','价格敏感者占比高，提示需入门款补全价格带']],
     risks:[['伪需求','若仅由少量极端用户驱动，机会规模有限'],['供给错配','机会点与现有供给能力不匹配时难以落地']],
-    actions:[['验证需求','用 VOC 回看需求频次与强度'],['切入排序','按 需求强度×人群规模×供给可行 排序机会'],['补全供给','针对价格敏感者补入门款']]}
+    actions:[['验证需求','用 VOC 回看需求频次与强度'],['切入排序','按 需求强度×人群规模×供给可行 排序机会'],['补全供给','针对价格敏感者补入门款']]},
+  innovation:{q:['这个新品创意有没有市场价值？','领先用户有没有表达类似需求？','技术/成本可行性如何？'],mood:'未定',title:'新品创意：领先用户需求对照 + ABM 采纳推演 = 双向可行性验证',
+    findings:[['需求验证','领先用户数据中匹配的痛点/问题越多，该创意的基础需求越真实'],['竞品覆盖','当前品类中已有同类 solution 数量越少，创意越稀缺'],['时机判断','领先用户首次表达距今越久，说明市场"等待"越久——发布窗口越紧迫']],
+    risks:[['伪创意','与领先用户需求零匹配时，创意可能只是内部猜想'],['过早','需求虽真实但领先用户表达时间过短，主流市场尚未感知→需要教育成本高']],
+    actions:[['验证优先','先做小范围领先用户访谈/投票，确认匹配度再投入开发'],['专利/壁垒','创意度高的方向第一时间申请专利或建立供应链壁垒']]}
 };
 // 场景默认输入：切场景时自动填充 seed/question/marketBase（用户可继续编辑）
 const SCENE_DEFAULTS={
@@ -1062,6 +1067,11 @@ const SCENE_DEFAULTS={
     seed:'正在评估「成人用品便携 / 旅行装」品类切入机会：需求来自用户访谈中 20% 用户提到"出差/聚会场景缺一款好收纳的"，社媒有 60+ 篇相关讨论；现有供给 95% 集中于家用大件，便携细分基本空白。基座显示：痛点击中者 10% / 价格敏感 18% / 品质党 15% / 竞品用户 15%。',
     question:'这个品类机会点是否成立？哪类需求最值得切入？现有品类结构该怎么优化？',
     marketBase:200000
+  },
+  innovation:{
+    seed:'正在评估一个新品创意：主打「请描述创意核心」方向，目标定价在 XX-XX 元区段。初步判断与技术可行性较高，但无同类产品对标。领先用户研究显示该方向有需求信号（请确认领域），但尚未有成熟 solution 覆盖。基座显示：尝鲜型 10% / 品质党 15% / 痛点击中者 10% / 竞品用户 15%。',
+    question:'这个新品创意有没有市场价值？领先用户有没有表达类似需求？技术/成本可行性如何？',
+    marketBase:150000
   }
 };
 
@@ -1071,9 +1081,9 @@ let PERSONAS=SEGMENTS;
 const PCOLOR=['#00d4ff','#a855f7','#ff6b9d','#10b981','#fbbf24','#3b82f6','#f97316','#22d3ee'];
 // 引擎直接读取 GROUPS[scene]；三场景共用同一套分群先验（基座统一）。
 // 元素：[x立场均值, 活跃度, 是否倡导者/KOL, y价格—品质取向]，由 SEG_PRIOR 提供
-let GROUPS={product:SEG_PRIOR,social:SEG_PRIOR,category:SEG_PRIOR};
+let GROUPS={product:SEG_PRIOR,social:SEG_PRIOR,category:SEG_PRIOR,innovation:SEG_PRIOR};
 // JSON 导入真实分群后调用，使 GROUPS 指向最新 SEG_PRIOR
-function syncGroups(){GROUPS={product:SEG_PRIOR,social:SEG_PRIOR,category:SEG_PRIOR};PERSONAS=SEGMENTS.slice()}
+function syncGroups(){GROUPS={product:SEG_PRIOR,social:SEG_PRIOR,category:SEG_PRIOR,innovation:SEG_PRIOR};PERSONAS=SEGMENTS.slice()}
 // 内置示例快照（用于"恢复内置示例"）
 const _DEFAULT={SEGMENTS:SEGMENTS.slice(),SEG_PRIOR:SEG_PRIOR.map(r=>r.slice()),SEG_WEIGHT:SEG_WEIGHT.slice(),SEG_TAGS:SEG_TAGS.slice()};
 function resetSegments(){SEGMENTS=_DEFAULT.SEGMENTS.slice();SEG_PRIOR=_DEFAULT.SEG_PRIOR.map(r=>r.slice());SEG_WEIGHT=_DEFAULT.SEG_WEIGHT.slice();SEG_TAGS=_DEFAULT.SEG_TAGS.slice();syncGroups();renderBase();const m=document.getElementById('importMsg');if(m){m.style.color='var(--cyan)';m.textContent='已恢复内置示例'}}
@@ -1099,7 +1109,8 @@ function applyImport(){
 const VARS_LABEL={
   product:{v1:'卖点透明度',v2:'痛点解决力度',v3:'达人/口碑投放'},
   social:{v1:'内容契合度',v2:'互动/激励力度',v3:'KOL 投放强度'},
-  category:{v1:'机会清晰度',v2:'需求覆盖度',v3:'生态/供给准备'}
+  category:{v1:'机会清晰度',v2:'需求覆盖度',v3:'生态/供给准备'},
+  innovation:{v1:'创意新颖度',v2:'需求验证深度',v3:'技术/成本可行度'}
 };
 // 社交网络拓扑：决定信息如何在群体中流动
 const TOPOS={
@@ -1169,6 +1180,16 @@ function renderSocialBase(){
   </div>`;
 }
 
+/* ---------- 新品创意数据基座（category-insight-hub） ---------- */
+const INNOVATION_DEFAULT={avgInnovation:60,avgValidation:0.5,marketReadiness:0.5,competitionGap:0.6,knownSolutions:5,needIntensity:0.5,leadUserTime:0,needFrequency:0.3};
+let INNOVATION_BASE=JSON.parse(JSON.stringify(INNOVATION_DEFAULT));
+function parseInnovationData(raw){
+  const arr=(raw&&raw.contents)?raw.contents:(Array.isArray(raw)?raw:(raw&&raw.products?raw.products:null));
+  if(!arr||!arr.length)throw new Error('未找到产品数据');
+  const total=arr.length;
+  return {avgInnovation:Math.max(10,100-Math.round(total*0.15)),competitionGap:+(1-Math.min(1,total/200)).toFixed(2),knownSolutions:total};
+}
+
 /* ---------- state ---------- */
 const state={done:false,pop:512,edges:0,scene:'product',mood:'',graphData:null,tick:12,engine:null,T:12,topo:'pa',mc:false,mcN:30};
 
@@ -1187,8 +1208,8 @@ function refreshChips(){
   SCENES[s].q.forEach(q=>{const c=document.createElement('div');c.className='chip';c.textContent=q;c.onclick=()=>{const qEl=document.getElementById('question');qEl.value=q;bindHover()};box.appendChild(c)});
   bindHover();updateVarLabels();
   if(typeof renderDSList==='function')renderDSList();
-  const bc=document.getElementById('briefCard');if(bc)bc.style.display=(s==='social')?'block':'none';
-  const mb=document.getElementById('mbLabel');if(mb)mb.innerHTML=(s==='social'?'账号矩阵粉丝规模（曝光换算用）：':(s==='category'?'品类可触达人群（估算用）：':'目标人群基数（仅新品销量场景用于估算）：'))+'<b id="mbL">'+(document.getElementById('marketBase')?document.getElementById('marketBase').value:'100000')+'</b>';
+  const bc=document.getElementById('briefCard');if(bc)bc.style.display=(s==='social'||s==='innovation')?'block':'none';
+  const mb=document.getElementById('mbLabel');if(mb)mb.innerHTML=(s==='social'?'账号矩阵粉丝规模（曝光换算用）：':(s==='category'?'品类可触达人群（估算用）：':(s==='innovation'?'预估市场人群（成功率换算用）：':'目标人群基数（仅新品销量场景用于估算）：')))+'<b id="mbL">'+(document.getElementById('marketBase')?document.getElementById('marketBase').value:'100000')+'</b>';
 }
 // 移到脚本末尾执行（依赖 DATA_SOURCES / EXPLAINS）
 // document.getElementById('scene').onchange=refreshChips;refreshChips();
@@ -1475,7 +1496,30 @@ function computeMetrics(scene){
       ['被触发痛点',pains.length?('以下分群痛点未被解决：'+pains.join('、')+'。'):'当前各负面先验分群均已被有效拉升，无显著未解痛点。'],
       ['评分预测',`终态均值 x=${mean.toFixed(2)} → 预计口碑评分 ${rating}/5，属${rating>=4?'优良':rating>=3?'中等':'偏弱'}区间。`]
     ];
-    out.summary=`基于 ${N} 个智能体推演，该品类机会的净推荐值 NPS=${nps>0?'+':''}${nps}，差评风险指数 ${risk}，预计口碑评分 ${rating}/5。${pains.length?('需优先解决：'+pains.join('、')+'。'):'负面先验分群已被有效拉升。'}`;
+    out.summary='基于 '+N+' 个智能体推演，该品类机会的净推荐值 NPS='+(nps>0?'+':'')+nps+'，差评风险指数 '+risk+'，预计口碑评分 '+rating+'/5。'+(pains.length?('需优先解决：'+pains.join('、')+'。'):'负面先验分群已被有效拉升。');
+  }else if(scene==='innovation'){
+    const ib=INNOVATION_BASE; const vars=curVars();
+    const adoptRate=ags.filter(a=>a.x>0.3).length/N;
+    const innovScore=clip(Math.round(ib.competitionGap*100+50*(vars.v1-0.5)+30*(vars.v2-0.5)),0,100);
+    const validation=clip(Math.round(ib.avgValidation*100+40*(vars.v2-0.5)),0,100);
+    const feasibility=clip(Math.round(vars.v3*100),0,100);
+    const futurity=ib.leadUserTime>0?clip(Math.round(ib.leadUserTime/24*100),0,100):clip(Math.round(40+20*vars.v2),0,100);
+    const success=clip(Math.round(0.3*innovScore+0.25*validation+0.25*adoptRate*100+0.2*feasibility),0,100);
+    out.kpis=[
+      {label:'成功率',value:success+'%',sub:'回顾匹配+仿真+可行性',tone:success>=60?'good':success>=35?'warn':'bad'},
+      {label:'创意度',value:innovScore+'/100',sub:'竞品覆盖越少分越高',tone:innovScore>=60?'good':innovScore>=35?'warn':'bad'},
+      {label:'前瞻性',value:futurity+'/100',sub:'领先用户时间轴',tone:futurity>=50?'good':'warn'},
+      {label:'需求验证度',value:validation+'%',sub:'领先用户匹配强度',tone:validation>=60?'good':validation>=30?'warn':'bad'},
+      {label:'可行性',value:feasibility+'%',sub:'技术/成本/供应链',tone:feasibility>=60?'good':feasibility>=35?'warn':'bad'}
+    ];
+    out.chartType='reach';out.chartData={reach:e.reach||[],reachLo:e.reachLo,reachHi:e.reachHi,T,heat:[]};
+    out.findings=[
+      ['回顾匹配','领先用户数据匹配度：竞争力缺口 '+(ib.competitionGap*100).toFixed(0)+'%（已知 solution '+ib.knownSolutions+' 个），品类创新紧迫度 '+(ib.competitionGap*100>=50?'高':'中')+'。'],
+      ['采纳推演','仿真终态采纳率 '+(adoptRate*100).toFixed(0)+'%'+(adoptRate>0.3?'，领先用户验证+仿真推演双向支持该创意':'，采纳率偏低，需检查创意与用户分群匹配')+'。'],
+      ['时机判断','该方向前瞻性 '+futurity+'/100'+(futurity>=50?'，市场准备度良好，建议尽快进入开发':'，需求信号较早，可能需要教育市场')+'。'],
+      ['可行评估','技术/成本可行性 '+feasibility+'%'+(feasibility>=60?'，交付风险可控':'，需优先验证核心难点')+'。']
+    ];
+    out.summary='基于领先用户数据匹配 + ABM 仿真推演：创意成功率 '+success+'%，创意度 '+innovScore+'/100，前瞻性 '+futurity+'/100。'+(success>=60?'该创意综合评估良好，建议进入立项流程。':'创意有亮但风险较高，建议先做领先用户验证再投入开发。');
   }else{
     const b=getBrief();
     const viral=predictViral(b);
@@ -1708,7 +1752,7 @@ function drawReport(){
   const kb=document.getElementById('kpiCards');kb.innerHTML='';
   if(M)M.kpis.forEach(k=>{const d=document.createElement('div');d.className='kpi-card '+(k.tone||'neutral');d.innerHTML=`<div class="kl">${k.label}</div><div class="kv">${k.value}</div><div class="ks">${k.sub||''}</div>`;kb.appendChild(d)});
   // 场景专属图表
-  document.getElementById('scenarioChartTitle').textContent={product:'新品采纳曲线（累计采纳率 %）',social:'社媒触达曲线（累计触达 %）+ 互动热度',category:'口碑结构：推荐者 / 中立 / 贬损者'}[state.scene]||'场景核心指标';
+  document.getElementById('scenarioChartTitle').textContent={product:'新品采纳曲线（累计采纳率 %）',social:'社媒触达曲线（累计触达 %）+ 互动热度',category:'口碑结构：推荐者 / 中立 / 贬损者',innovation:'创意场景 · 采纳曲线 + 触达'}[state.scene]||'场景核心指标';
   drawScenarioChart(M);
   // 社媒基准对比表（仅社媒场景渲染）
   const sb=document.getElementById('socialBench');
@@ -1907,7 +1951,11 @@ const DATA_SOURCES=[
   {id:'pod',name:'产品运营看板',icon:'📊',desc:'SKU 级别销量/订单/渠道/类目数据',
    url:'https://raw.githubusercontent.com/ffswwwda/product-ops-dashboard/main/data/sales_data.json',
    scenes:{product:3,social:0,category:1},handler:'sales',accuracy:'中',
-   notes:'<b>校准内容</b>：新品销量预测的目标人群基数 + 历史采纳率。导入后新品销量估算更准。'}
+   notes:'<b>校准内容</b>：新品销量预测的目标人群基数 + 历史采纳率。导入后新品销量估算更准。'},
+  {id:'hub',name:'品类洞察（全量产品）',icon:'🎯',desc:'248 条产品数据 + 类目/价格/评分/竞品分析',
+   url:'https://raw.githubusercontent.com/ffswwwda/category-insight-hub/main/de_records.json',
+   scenes:{product:2,social:1,category:2,innovation:3},handler:'innovation',accuracy:'高',
+   notes:'<b>校准内容</b>：INNOVATION_BASE 竞争缺口/已知解决方案/品类分布。导入后新品创意预测的创意度/可行性显著提升。'}
 ];
 const DS_STATUS={};
 function renderDSList(){
@@ -1967,6 +2015,9 @@ async function connectDS(id){
       calibrated='品类洞察（痛点 + 需求缺口）';
     }else if(src.handler==='sales'){
       calibrated='销量基线（市场基数 + 历史采纳率）';
+    }else if(src.handler==='innovation'){
+      INNOVATION_BASE=parseInnovationData(data);
+      calibrated='INNOVATION_BASE（竞品缺口 + 已知 solution + 品类分布）';
     }
     const count=data.contents?data.contents.length:data.segments?data.segments.length:Object.keys(data).length;
     DS_STATUS[id]={status:'connected',info:count+' 条',data,acc:'L2',calibrated};
