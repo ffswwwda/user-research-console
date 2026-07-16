@@ -878,32 +878,32 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
   <section class="page" id="page-arch">
     <div class="crumb" onclick="go('console')">← <b>预测工作台</b><span class="sep">/</span>架构说明</div>
     <div class="page-head">
-      <h1 class="page-title">架构说明</h1>
-      <p class="page-sub">MiroFish 构建于 CAMEL-AI 开源的 OASIS 社会仿真引擎之上，融合 GraphRAG 图谱与 Zep 长期记忆，形成完整的"提取 → 建模 → 演化 → 报告 → 交互"闭环。</p>
+      <h1 class="page-title">架构说明 · 用户研究预测版</h1>
+      <p class="page-sub">这是基于 MiroFish/OASIS 多智能体社会仿真架构改造的<b>用户研究预测引擎</b>。核心改动：用你的 VOC 聚类结果驱动人格生成（替代 LLM 提取），用 content-analytics-dashboard 的实际社媒数据校准预测基线，新增三场景差异化输出。架构从"通用仿真"变为"数据驱动的用户研究推演"。</p>
     </div>
 
     <div class="arch-grid">
-      <div class="glass arch-card"><div class="arch-ic">🧬</div><h4>种子提取 & GraphRAG</h4><p>从新闻、政策、金融信号、小说文本中抽取实体与关系，构建高保真知识图谱，为每个智能体注入个体记忆与集体记忆。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">🎭</div><h4>人格生成引擎</h4><p>基于图谱实体自动生成拥有独立性格、立场、行为逻辑的智能体，并完成 Agent 配置注入，构成一个可信的数字社会。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">🌊</div><h4>双平台并行仿真</h4><p>底层基于 OASIS 引擎，支持双平台并行模拟，动态更新时间记忆，让数千智能体自由互动、社会演化。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">📄</div><h4>ReportAgent</h4><p>携带丰富工具集，在仿真结束后与数字世界深度交互，自动解析预测需求，产出可读的结构化预测报告。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">💬</div><h4>深度交互层</h4><p>用户可与世界中任意智能体对话，也可与 ReportAgent 交互追问，把黑箱预测变成可对话、可审视的过程。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">🌍</div><h4>God's-Eye 变量注入</h4><p>从"上帝视角"动态注入变量，精确推演不同干预下的未来轨迹——这是决策排练的核心能力。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">🧬</div><h4>用户基座 · 人格来源</h4><p>8 个预设分群（尝鲜型/价格敏感者/品质党/观望群体/痛点击中者/KOL/差评传播者/竞品用户）组成仿真的人格先验。每个分群有 {x立场均值, y价格-品质取向, 活跃度, 是否KOL, 占比权重}。支持通过 VOC 聚类导出 <code>{segments:[...]}</code> JSON 一键导入覆盖。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">📱</div><h4>社媒数据基座 SOCIAL_BASE</h4><p>从 content-analytics-dashboard 提取的社媒基准：内容形式(清单/直播切片/图文/视频)的爆款率、情绪(搞笑/实用/震惊/高级/共鸣)的爆款率、主题(平替/成分科普/赠礼/抽奖)表现、账号类型放大系数、活动节点抬升系数、最佳发帖时段。支持 <code>content_data.json</code> 全量导入自动重算。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">🌊</div><h4>确定性多智能体引擎 ENGINE</h4><p>纯前端 mulberry32 种子化随机数，同参数完全可复算。512 智能体（128-2048 可调）在无标度/小世界/随机三种网络拓扑上跑 12 时间步的完整社会演化：激活（arousal=e⁻ᵗ/⁴）→ Reddit hot-score 推荐 → 动作决策（like/repost/dislike/comment/create）→ 有界信心 + DeGroot 观点更新 → 上帝变量注入 → 统计。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">📊</div><h4>三场景差异化输出 computeMetrics</h4><p>按场景提取专属指标与运营化结论：<b>新品上市</b>（采纳率/分群转化/销量区间/价格敏感者风险）、<b>社媒活动</b>（预测爆款率/曝光区间/触达率/转发系数K/翻车风险）、<b>品类机会</b>（NPS/差评风险指数/评分预测/痛点触发）。每个场景的 KPI 卡 + 专属图 + 填数结论模板不同。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">🔌</div><h4>数据源系统 · 多源路由</h4><p>4 个注册数据源（内容灵感台 / VOC 标签报告 / 品类洞察 / 产品运营看板）按场景推荐，一键直连 raw.githubusercontent.com 自动校准：social handler → parseSocialData 重算 SOCIAL_BASE；voc handler → applyImport 升级人格；category/sales handler 校准品类与销量基线。准确率档位 L0→L3 实时指示。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">🧭</div><h4>三种预测路径合一</h4><p>①<b>回顾式</b>（关键词匹配 + 历史相似样本）可由 content-analytics-dashboard 实现；②<b>预测式</b>（本工具的多智能体仿真 + 公式模型）是当前主体的预测方式；③<b>接大模型</b>（LLM 做精细分群/语义聚类/情感建模）是准备好接口、等待 API 接入的升级路径。三条路径相互补充而非替代。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">🔄</div><h4>蒙特卡洛 · 统计显著性</h4><p>打开开关后用不同随机流重复仿真 N 次（20-100），输出终态均值 ± 95% 置信区间、终态分布直方图、以及由方差导出的置信度得分。影响因子雷达图对每个上帝变量做有限差分敏感度分析（真实重跑引擎测量变量影响力）。确定性 + 随机性结合。</p></div>
     </div>
 
     <div class="glass sec">
-      <div class="sec-title"><span class="bar"></span>技术栈</div>
+      <div class="sec-title"><span class="bar"></span>技术栈（本页面版本）</div>
       <div class="tech-row">
-        <div class="tech"><b>前端</b> Node.js 18+ · localhost:3000</div>
-        <div class="tech"><b>后端</b> Python 3.11–3.12 · uv · localhost:5001</div>
-        <div class="tech"><b>仿真引擎</b> OASIS / CAMEL-AI</div>
-        <div class="tech"><b>图谱</b> GraphRAG</div>
-        <div class="tech"><b>记忆</b> Zep Cloud</div>
-        <div class="tech"><b>LLM</b> OpenAI SDK 格式 · Qwen-plus</div>
-        <div class="tech"><b>部署</b> 源码 / Docker Compose</div>
-        <div class="tech"><b>许可证</b> AGPL-3.0</div>
+        <div class="tech"><b>架构来源</b> MiroFish / OASIS（CAMEL-AI）</div>
+        <div class="tech"><b>仿真引擎</b> 前端 ENGINE 对象 · mulberry32</div>
+        <div class="tech"><b>图表</b> ECharts 5.4 CDN</div>
+        <div class="tech"><b>数据导入</b> VOC JSON / content_data.json</div>
+        <div class="tech"><b>数据直连</b> raw.githubusercontent.com CORS</div>
+        <div class="tech"><b>部署</b> GitHub Pages · 静态单文件</div>
+        <div class="tech"><b>零后端</b> 全部计算在浏览器内完成</div>
       </div>
-      <div class="sec-desc" style="margin-top:20px">开源仓库：<b style="color:var(--cyan)">github.com/666ghj/MiroFish</b> · 由盛大集团战略孵化。本页面为基于其公开架构文档制作的交互式演示原型，仿真数据由前端确定性算法模拟，仅供研究理解引擎工作流之用。</div>
+      <div class="sec-desc" style="margin-top:20px">原始 MiroFish 开源仓库：<b style="color:var(--cyan)">github.com/666ghj/MiroFish</b>（AGPL-3.0，盛大集团孵化）。本版本在其公开架构基础上做了大量面向用户研究场景的改造：人格来源从 LLM 提取改为 VOC 聚类驱动、基线校准从默认参数改为真实社媒数据导入、输出从通用仿真报告改为三场景运营化结论。所有仿真数值由前端确定性 ABM 引擎计算，不等后端、不调 API。</div>
     </div>
   </section>
 
