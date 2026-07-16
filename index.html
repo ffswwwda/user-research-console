@@ -873,6 +873,50 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
         这套管道设计已经在仪表板的扩展点上预留，接入只需一个 <code>llmEnrichPersonas()</code> 函数。
       </div>
     </div>
+
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>预测模型的真实结构 · 两条独立路径</div>
+      <div class="sec-desc" style="line-height:1.9">
+        <b>这个工具内部不是"一条流水线"，而是两条互相独立的路径，结果在报告页合并展示。理解这点才能理解当前输出的边界。</b>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0">
+        <div style="padding:18px;border-radius:12px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2)">
+          <div style="font-size:14px;font-weight:700;color:#a855f7;margin-bottom:10px">路径 A：ABM 多智能体社会仿真</div>
+          <div style="font-size:12.5px;line-height:1.7;color:var(--ts)">
+            <b>理论基础</b>：Hegselmann-Krause 有界信心模型(1983) + DeGroot 社会影响模型(1974) + Reddit hot-score 热度排序<br><br>
+            <b>输入</b>：512 个 agent（立场 x、活跃度、影响力） + 有界信心阈值 eps + 网络拓扑（PA/SW/ER） + 上帝变量（v1/v2/v3）<br><br>
+            <b>每步循环</b>（共 12 步）：激活(arousal=e<small>⁻ᵗ/⁴</small>) → 推荐(hot-score+同质性Top5) → 动作决策(like/repost/dislike/comment/create post) → 观点更新(x+=μ·Σw(stance-x)/Σw) → 上帝变量注入 → 统计<br><br>
+            <b>输出</b>：reach 触达曲线 / K 转发系数 / 态度分布(pos/neu/neg%) / adopt 采纳曲线<br><br>
+            <b>它不知道</b>：你的内容是清单还是直播切片、是实用还是搞笑。它只模拟一般化的内容传播动力学。
+          </div>
+        </div>
+        <div style="padding:18px;border-radius:12px;background:rgba(55,138,221,.06);border:1px solid rgba(55,138,221,.2)">
+          <div style="font-size:14px;font-weight:700;color:#378ADD;margin-bottom:10px">路径 B：加权基准公式</div>
+          <div style="font-size:12.5px;line-height:1.7;color:var(--ts)">
+            <b>理论基础</b>：历史基准校准法 + 影响因子线性叠加（"如果内容和历史上爆款内容相似 X%，并且上帝变量调 Y，那预测爆款率 ≈ X% ± Y%"）<br><br>
+            <b>输入</b>：内容简报（form/emo/theme/author/activity）+ 上帝变量（v1/v2/v3）+ SOCIAL_BASE 历史基准<br><br>
+            <b>公式</b>：<br>
+            &nbsp;&nbsp;① base = 0.4×formViral + 0.3×emoViral + 0.3×themeViral &nbsp;（查历史基准）<br>
+            &nbsp;&nbsp;② rate = base × (0.7 + 0.3×accountInfl) &nbsp;（账号校准，上限 1.0）<br>
+            &nbsp;&nbsp;③ rate += (v1-0.5)×20 + (v2-0.5)×12 + (v3-0.5)×8 &nbsp;（上帝变量，加法叠加）<br>
+            &nbsp;&nbsp;④ KOL 投放对高影响力账号额外 bonus<br>
+            &nbsp;&nbsp;⑤ 若绑定活动 × activityLift &nbsp;（活动抬升）<br>
+            &nbsp;&nbsp;⑥ predictExposure = reachPct × 粉丝数 × 变量调整 &nbsp;（曝光估算）<br><br>
+            <b>它不知道</b>：内容在人群中具体怎么传播。它只查历史同类内容的平均表现。
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-desc" style="line-height:1.9;margin-top:4px">
+        <div class="sec-title" style="margin-bottom:8px;margin-top:8px"><span class="bar"></span>当前问题：两条路径互相独立</div>
+        <b>ABM 仿真输出 reach/K/态度分布，但公式不使用这些值。</b>公式输出的预测爆款率不使用仿真的 reach 和 K 做修正。唯一的共同输入就是上帝变量那 3 个滑杆。所以报告页里：触达率/K 来自 ABM 仿真，预测爆款率/曝光来自公式——<b>说的是同一件事但各自计算</b>。<br><br>
+        <div class="sec-title" style="margin-bottom:8px;margin-top:8px"><span class="bar"></span>理想架构（已设计好，待代码修改）</div>
+        把两条路径串起来：公式不再只查 SOCIAL_BASE 的静态均值，而是引用仿真的 reach 和 K 做动态修正——<br>
+        <code style="font-size:13px">最终爆款率 = 公式base × (1 + 0.4×(reachPct-0.5)) × (1 + 0.2×(K-1))</code><br>
+        这样仿真跑得好（触达高、K 高）→ 预测爆款率上调；仿真跑不好 → 下调。两条路径就真正融合了。
+      </div>
+    </div>
   </section>
 
   <section class="page" id="page-arch">
