@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户研究预测引擎 · 基于 MiroFish 架构</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+:root{
+  --bg-dark:#0a0e1a; --bg-card:rgba(20,28,48,.6); --bg-glass:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.1); --border-glow:rgba(0,212,255,.3);
+  --tp:#fff; --ts:rgba(255,255,255,.6); --tm:rgba(255,255,255,.4);
+  --cyan:#00d4ff; --pink:#ff6b9d; --purple:#a855f7; --blue:#3b82f6;
+  --green:#10b981; --yellow:#fbbf24; --orange:#f97316; --red:#ef4444;
+  --grad:linear-gradient(135deg,#00d4ff 0%,#a855f7 50%,#ff6b9d 100%);
+  --grad2:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  --ease:cubic-bezier(.25,.46,.45,.94);
+  --bg-light:#F7F5F5; --tp-l:#414546; --ts-l:rgba(0,0,0,.6); --tm-l:rgba(0,0,0,.4);
+  --border-l:rgba(0,0,0,.08); --glass-l:rgba(255,255,255,.7);
+  --cyan-l:#00C3F3; --gold:#DBB360;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC',sans-serif;min-height:100vh;overflow-x:hidden;cursor:none;transition:background .5s ease,color .5s ease}
+body.dark{background:var(--bg-dark);color:var(--tp)}
+body.light{background:var(--bg-light);color:var(--tp-l)}
+body.dark::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 15% 15%,rgba(0,212,255,.1) 0%,transparent 45%),radial-gradient(circle at 85% 25%,rgba(168,85,247,.1) 0%,transparent 45%),radial-gradient(circle at 50% 90%,rgba(255,107,157,.06) 0%,transparent 55%);pointer-events:none;z-index:0}
+body.dark::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+body.light::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 15% 15%,rgba(0,195,243,.07) 0%,transparent 45%),radial-gradient(circle at 85% 25%,rgba(168,85,247,.05) 0%,transparent 45%);pointer-events:none;z-index:0}
+
+/* cursor */
+.cur{position:fixed;width:18px;height:18px;border-radius:50%;background:var(--grad);pointer-events:none;z-index:99999;mix-blend-mode:screen;box-shadow:0 0 18px var(--cyan),0 0 36px var(--purple);transform:translate(-50%,-50%);transition:width .3s,height .3s}
+.cur-glow{position:fixed;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.25) 0%,transparent 70%);pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:all .12s}
+.particle{position:fixed;width:5px;height:5px;border-radius:50%;background:var(--cyan);pointer-events:none;z-index:99997;opacity:.8}
+
+/* navbar */
+.navbar{position:fixed;top:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:1000;background:rgba(10,14,26,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+body.light .navbar{background:rgba(247,245,245,.8);border-bottom:1px solid var(--border-l)}
+.nav-left{display:flex;align-items:center;gap:40px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px;letter-spacing:-.5px}
+.brand-logo{width:38px;height:38px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 6px 20px rgba(0,212,255,.35)}
+.brand small{font-size:11px;font-weight:500;opacity:.5;letter-spacing:0}
+.nav-main{display:flex;gap:6px}
+.nav-item{padding:8px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:none;transition:all .3s var(--ease);color:var(--ts)}
+body.light .nav-item{color:var(--ts-l)}
+.nav-item:hover{color:var(--tp);background:rgba(255,255,255,.05)}
+body.light .nav-item:hover{color:var(--tp-l);background:rgba(0,0,0,.03)}
+.nav-item.active{background:var(--grad);color:#fff;box-shadow:0 6px 18px rgba(0,212,255,.3)}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nav-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ts);padding:6px 12px;border-radius:20px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.theme-toggle{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:none;font-size:16px;background:rgba(255,255,255,.06);border:1px solid var(--border);transition:all .3s}
+.theme-toggle:hover{transform:scale(1.08);box-shadow:0 0 18px rgba(0,212,255,.3)}
+.switch-engine{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ts);padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--border);cursor:none;transition:all .3s;text-decoration:none;white-space:nowrap}
+.switch-engine:hover{transform:scale(1.04);box-shadow:0 0 18px rgba(0,212,255,.3);color:var(--tp);border-color:var(--border-glow)}
+.switch-engine b{color:var(--cyan);font-weight:700}
+.switch-engine .ar{opacity:.7}
+
+/* sidebar */
+.sidebar{position:fixed;top:64px;left:0;bottom:0;width:230px;padding:24px 16px;overflow-y:auto;z-index:900;background:rgba(15,21,37,.5);backdrop-filter:blur(16px);border-right:1px solid var(--border)}
+body.light .sidebar{background:rgba(255,255,255,.4);border-right:1px solid var(--border-l)}
+.side-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--tm);margin:20px 12px 10px;font-weight:700}
+.side-title:first-child{margin-top:0}
+.side-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;font-size:14px;cursor:none;transition:all .3s var(--ease);color:var(--ts);margin-bottom:3px;border:1px solid transparent}
+body.light .side-item{color:var(--ts-l)}
+.side-item:hover{background:rgba(255,255,255,.05);color:var(--tp);transform:translateX(4px)}
+body.light .side-item:hover{background:rgba(0,0,0,.03);color:var(--tp-l)}
+.side-item.active{background:rgba(0,212,255,.1);color:var(--cyan);border-color:rgba(0,212,255,.25)}
+.side-item .ic{width:18px;text-align:center;font-size:15px}
+
+/* main */
+.main{margin-left:230px;margin-top:64px;padding:32px 40px 80px;position:relative;z-index:1;min-height:calc(100vh - 64px)}
+.page{display:none;animation:fadeUp .5s var(--ease)}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.page-head{margin-bottom:28px}
+.page-title{font-size:30px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.page-title.grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.page-sub{font-size:15px;color:var(--ts);max-width:760px;line-height:1.7}
+body.light .page-sub{color:var(--ts-l)}
+
+/* glass */
+.glass{background:var(--bg-glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:20px;transition:all .4s var(--ease)}
+body.light .glass{background:var(--glass-l);border-color:var(--border-l)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:24px}
+.stat{padding:26px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad);opacity:0;transform:scaleX(0);transition:all .4s}
+.stat:hover::before{opacity:1;transform:scaleX(1)}
+.stat:hover{transform:translateY(-8px);border-color:var(--border-glow);box-shadow:0 20px 40px rgba(0,0,0,.25),0 0 30px rgba(0,212,255,.1)}
+.stat-label{font-size:13px;color:var(--ts);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+body.light .stat-label{color:var(--ts-l)}
+.stat-val{font-size:34px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:12px;color:var(--tm);margin-top:10px}
+
+/* sections */
+.sec{padding:28px;margin-bottom:24px}
+.sec-title{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.sec-title .bar{width:4px;height:18px;border-radius:2px;background:var(--grad)}
+.sec-desc{font-size:14px;color:var(--ts);line-height:1.7;margin-bottom:16px}
+body.light .sec-desc{color:var(--ts-l)}
+
+/* buttons */
+.btn{padding:13px 30px;border-radius:13px;font-size:15px;font-weight:700;cursor:none;border:none;transition:all .4s var(--ease);position:relative;overflow:hidden;font-family:inherit}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(45deg,transparent 30%,rgba(255,255,255,.3) 50%,transparent 70%);transform:translateX(-100%);transition:transform .6s}
+.btn:hover::before{transform:translateX(100%)}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 8px 24px rgba(0,212,255,.3)}
+.btn-primary:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 16px 40px rgba(0,212,255,.4)}
+.btn-primary:disabled{opacity:.5;cursor:none;transform:none;box-shadow:none}
+.btn-sec{background:transparent;border:1.5px solid rgba(0,212,255,.4);color:var(--cyan)}
+.btn-sec:hover{background:rgba(0,212,255,.1);transform:translateY(-3px)}
+
+/* workflow steps */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:8px 0 4px}
+.flow-step{padding:22px 16px;text-align:center;position:relative;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);transition:all .5s var(--ease)}
+body.light .flow-step{background:rgba(0,0,0,.02)}
+.flow-step .num{position:absolute;top:10px;right:12px;font-size:11px;font-weight:800;opacity:.3}
+.flow-ic{width:56px;height:56px;margin:0 auto 14px;border-radius:16px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:26px;transition:all .5s var(--ease)}
+.flow-step h4{font-size:14px;font-weight:700;margin-bottom:6px}
+.flow-step p{font-size:11.5px;color:var(--tm);line-height:1.5}
+.flow-step.done .flow-ic{background:var(--grad);box-shadow:0 8px 24px rgba(0,212,255,.4)}
+.flow-step.done{border-color:var(--border-glow);background:rgba(0,212,255,.06)}
+.flow-step.run .flow-ic{background:var(--grad);animation:spin 1.2s linear infinite,glow 1.2s ease infinite}
+.flow-step.run{border-color:var(--cyan)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(0,212,255,.5)}50%{box-shadow:0 0 40px rgba(168,85,247,.7)}}
+.flow-arrow{position:absolute;top:50%;right:-11px;transform:translateY(-50%);font-size:16px;color:var(--tm);z-index:2}
+
+/* input */
+.field{margin-bottom:18px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--ts);margin-bottom:8px}
+body.light .field label{color:var(--ts-l)}
+.field textarea,.field input,.field select{width:100%;padding:14px 16px;font-size:14px;font-family:inherit;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:13px;color:inherit;transition:all .3s var(--ease);outline:none;resize:vertical}
+body.light .field textarea,body.light .field input,body.light .field select{background:rgba(255,255,255,.6);border-color:var(--border-l)}
+.field textarea:focus,.field input:focus,.field select:focus{border-color:rgba(0,212,255,.5);box-shadow:0 0 18px rgba(0,212,255,.15);background:rgba(255,255,255,.08)}
+.field select option{background:#141c30;color:#fff}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{padding:7px 14px;border-radius:20px;font-size:12.5px;cursor:none;background:rgba(255,255,255,.05);border:1px solid var(--border);transition:all .3s;color:var(--ts)}
+.chip:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-2px)}
+body.light .chip{color:var(--ts-l)}
+
+/* console layout */
+.console-grid{display:grid;grid-template-columns:1.1fr 1.5fr;gap:24px;align-items:start}
+@media(max-width:1100px){.console-grid{grid-template-columns:1fr}}
+
+/* log terminal */
+.terminal{font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;line-height:1.9;height:280px;overflow-y:auto;padding:18px;background:rgba(0,0,0,.35);border-radius:14px;border:1px solid var(--border)}
+body.light .terminal{background:rgba(0,0,0,.85);color:#e2e8f0}
+.log-line{opacity:0;animation:logIn .3s forwards}
+@keyframes logIn{to{opacity:1}}
+.log-t{color:var(--tm);margin-right:8px}
+.log-ok{color:var(--green)}
+.log-info{color:var(--cyan)}
+.log-warn{color:var(--yellow)}
+.log-agent{color:var(--purple)}
+
+/* progress */
+.prog-wrap{margin:16px 0}
+.prog-label{display:flex;justify-content:space-between;font-size:13px;color:var(--ts);margin-bottom:8px}
+.prog-bar{height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:var(--grad);border-radius:4px;transition:width .5s var(--ease);box-shadow:0 0 14px var(--cyan)}
+
+/* chart */
+.chart{width:100%;height:340px}
+.chart-sm{width:100%;height:280px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+/* agent chat */
+.agent-list{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.agent-pill{display:flex;align-items:center;gap:9px;padding:9px 15px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid var(--border);cursor:none;transition:all .3s var(--ease);font-size:13px}
+.agent-pill:hover{transform:translateY(-2px);border-color:var(--border-glow)}
+.agent-pill.active{background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.4)}
+.agent-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--grad2)}
+.chat-box{height:340px;overflow-y:auto;padding:8px 4px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:78%;padding:13px 17px;border-radius:16px;font-size:14px;line-height:1.6;animation:fadeUp .4s var(--ease)}
+.msg.user{align-self:flex-end;background:var(--grad);color:#fff;border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:rgba(255,255,255,.06);border:1px solid var(--border);border-bottom-left-radius:4px}
+body.light .msg.bot{background:rgba(0,0,0,.04)}
+.msg .who{font-size:11px;opacity:.6;margin-bottom:5px;font-weight:700}
+.chat-input{display:flex;gap:10px;margin-top:16px}
+.chat-input input{flex:1}
+
+/* report */
+.report-box{padding:32px}
+.rep-verdict{display:flex;align-items:center;gap:24px;padding:24px;border-radius:16px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);margin-bottom:24px}
+.rep-gauge{flex-shrink:0}
+.rep-verdict h3{font-size:20px;margin-bottom:8px}
+.rep-verdict p{font-size:14px;color:var(--ts);line-height:1.7}
+body.light .rep-verdict p{color:var(--ts-l)}
+.rep-section{margin-bottom:22px}
+.rep-section h4{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.rep-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.rep-list li{display:flex;gap:12px;font-size:14px;line-height:1.6;color:var(--ts);padding:12px 16px;background:rgba(255,255,255,.03);border-radius:11px;border-left:3px solid var(--cyan)}
+body.light .rep-list li{color:var(--ts-l);background:rgba(0,0,0,.02)}
+.rep-list li.warn{border-left-color:var(--yellow)}
+.rep-list li.risk{border-left-color:var(--red)}
+.rep-list .k{color:var(--cyan);font-weight:700;flex-shrink:0}
+
+/* arch */
+.arch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:24px}
+.arch-card{padding:26px;transition:all .4s var(--ease)}
+.arch-card:hover{transform:translateY(-8px);border-color:var(--border-glow);box-shadow:0 18px 40px rgba(0,0,0,.25)}
+.arch-ic{width:52px;height:52px;border-radius:14px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px;box-shadow:0 8px 20px rgba(0,212,255,.3)}
+.arch-card h4{font-size:16px;font-weight:700;margin-bottom:10px}
+.arch-card p{font-size:13.5px;color:var(--ts);line-height:1.7}
+body.light .arch-card p{color:var(--ts-l)}
+.tech-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.tech{padding:8px 16px;border-radius:10px;font-size:13px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.tech b{color:var(--cyan)}
+
+.empty{text-align:center;padding:60px 20px;color:var(--tm)}
+.empty .big{font-size:52px;margin-bottom:16px;opacity:.5}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.3)}
+
+@media(max-width:1024px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.flow{grid-template-columns:1fr 1fr}.nav-main{display:none}}
+@media(max-width:768px){.cur,.cur-glow{display:none}body{cursor:auto}.btn,.nav-item,.side-item,.chip,.agent-pill{cursor:pointer}}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}::-webkit-scrollbar-track{background:transparent}
+.algo-pre{margin:14px 0 0;padding:18px 20px;border-radius:14px;background:var(--glass2,rgba(0,0,0,.04));border:1px solid var(--line,rgba(0,0,0,.08));font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.75;overflow-x:auto;color:var(--txt,#3a3f44);white-space:pre}
+body.dark .algo-pre{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.82)}
+.algo-pre b{font-weight:600}
+.algo-pre .ac1{color:#00b3d6}body.dark .algo-pre .ac1{color:#22d3ee}
+.algo-pre .ac2{color:#a855f7}
+.algo-table-wrap{max-height:340px;overflow:auto;margin-top:12px;border-radius:12px}
+.algo-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.algo-table th{position:sticky;top:0;background:var(--glass2,rgba(0,0,0,.05));backdrop-filter:blur(6px);padding:9px 8px;text-align:right;font-weight:600;color:var(--muted,#6b7075);border-bottom:1px solid var(--line,rgba(0,0,0,.1))}
+.algo-table th:first-child{text-align:center}
+body.dark .algo-table th{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.12)}
+.algo-table td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line,rgba(0,0,0,.05));font-variant-numeric:tabular-nums}
+.algo-table td:first-child{text-align:center;color:var(--cyan)}
+body.dark .algo-table td{border-color:rgba(255,255,255,.06)}
+.algo-table tr:hover td{background:rgba(0,212,255,.06)}
+.algo-pre code,.sec-desc code{font-family:'SF Mono',ui-monospace,monospace;font-size:.92em;padding:1px 5px;border-radius:5px;background:rgba(0,212,255,.12);color:#0093b3}
+body.dark .sec-desc code{color:#67e8f9}
+
+/* Monte Carlo 开关与统计 */
+.mc-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mc-label{display:flex;flex-direction:column;gap:2px;font-size:14px;color:var(--txt,#3a3f44)}
+body.dark .mc-label{color:rgba(255,255,255,.82)}
+.mc-hint{font-size:11px;color:var(--muted,#6b7075)}
+.switch{position:relative;width:46px;height:26px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.slider-sw{position:absolute;inset:0;background:rgba(0,0,0,.18);border-radius:20px;cursor:none;transition:.3s}
+body.dark .slider-sw{background:rgba(255,255,255,.16)}
+.slider-sw:before{content:'';position:absolute;height:20px;width:20px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.switch input:checked+.slider-sw{background:linear-gradient(90deg,#00d4ff,#a855f7)}
+.switch input:checked+.slider-sw:before{transform:translateX(20px)}
+.mc-stats{display:flex;flex-wrap:wrap;gap:10px 26px;margin:8px 0 14px;padding:14px 16px;border-radius:12px;background:var(--glass2,rgba(0,0,0,.04));border:1px solid var(--line,rgba(0,0,0,.08));font-size:13px;color:var(--muted,#6b7075)}
+body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}
+.mc-stats b{color:var(--cyan);font-weight:600;margin-right:6px}
+</style>
+</head>
+<body class="dark">
+<div class="cur" id="cur"></div>
+<div class="cur-glow" id="curGlow"></div>
+
+<nav class="navbar">
+  <div class="nav-left">
+    <div class="brand">
+      <div class="brand-logo">🐟</div>
+      <div>用户研究预测引擎</div>
+    </div>
+    <div class="nav-main">
+      <div class="nav-item active" data-page="overview">概览</div>
+      <div class="nav-item" data-page="console">预测工作台</div>
+      <div class="nav-item" data-page="world">数字世界</div>
+      <div class="nav-item" data-page="algo">算法引擎</div>
+      <div class="nav-item" data-page="report">预测报告</div>
+      <div class="nav-item" data-page="base">用户基座</div>
+      <div class="nav-item" data-page="arch">架构说明</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-status"><span class="dot"></span>引擎在线</div>
+    <a class="switch-engine" href="https://ffswwwda.github.io/mirofish-console/" title="切换到 MiroFish 原版">🔀 MiroFish 原版</a>
+    <div class="theme-toggle" id="themeBtn">🌙</div>
+  </div>
+</nav>
+
+<aside class="sidebar">
+  <div class="side-title">开始</div>
+  <div class="side-item active" data-page="overview"><span class="ic">📊</span>引擎概览</div>
+  <div class="side-item" data-page="console"><span class="ic">🎛️</span>预测工作台</div>
+  <div class="side-title">仿真</div>
+  <div class="side-item" data-page="world"><span class="ic">🌐</span>数字世界</div>
+  <div class="side-item" data-page="algo"><span class="ic">⚙️</span>算法引擎</div>
+  <div class="side-item" data-page="report"><span class="ic">📄</span>预测报告</div>
+  <div class="side-title">了解</div>
+  <div class="side-item" data-page="base"><span class="ic">🧬</span>用户基座</div>
+  <div class="side-item" data-page="arch"><span class="ic">🏗️</span>架构说明</div>
+  <div class="side-item" data-page="arch"><span class="ic">⚙️</span>技术栈</div>
+</aside>
+
+<main class="main">
+
+  <!-- ================= OVERVIEW ================= -->
+  <section class="page active" id="page-overview">
+    <div class="page-head">
+      <h1 class="page-title grad">从现实世界，排练一个未来</h1>
+      <p class="page-sub">这是一个基于用户研究体系的预测推演引擎。它把你的 VOC 语料、用户分群与标签体系，沉淀为一张"用户基座"——上千个拥有真实态度、痛点与动机的用户智能体在其中互动、演化。你以"上帝视角"注入营销 / 运营杠杆（定价、卖点、内容、达人投放），在沙盒里反复试错，看清每个"如果"的结果：新品会不会卖、活动会不会爆、品类机会成不成立。</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="glass stat"><div class="stat-label">🤖 默认智能体</div><div class="stat-val counter" data-target="512">0</div><div class="stat-sub">可调 128–2048 · 浏览器内</div></div>
+      <div class="glass stat"><div class="stat-label">🧮 时间步</div><div class="stat-val counter" data-target="12">0</div><div class="stat-sub">T+0 → T+12 社会演化</div></div>
+      <div class="glass stat"><div class="stat-label">🌐 网络拓扑</div><div class="stat-val counter" data-target="3">0</div><div class="stat-sub">无标度 / 小世界 / 随机</div></div>
+      <div class="glass stat"><div class="stat-label">⚡ 单次仿真</div><div class="stat-val">&lt;1<span style="font-size:18px">s</span></div><div class="stat-sub">浏览器内实时 · 零后端</div></div>
+    </div>
+
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>五步工作流</div>
+      <div class="sec-desc">上传种子材料，用自然语言描述你的预测需求。引擎自动跑完从图谱构建到报告生成的全流程，最后你还能钻进这个世界，跟任意智能体对话。</div>
+      <div class="flow">
+        <div class="flow-step"><span class="num">01</span><div class="flow-ic">🧬</div><h4>图谱构建</h4><p>种子提取 + 记忆注入，GraphRAG 建关系网</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step"><span class="num">02</span><div class="flow-ic">🎭</div><h4>环境设置</h4><p>实体关系抽取，人格生成，Agent 配置</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step"><span class="num">03</span><div class="flow-ic">🌊</div><h4>模拟仿真</h4><p>双平台并行演化，动态时间记忆更新</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step"><span class="num">04</span><div class="flow-ic">📄</div><h4>报告生成</h4><p>ReportAgent 深度交互产出预测报告</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step"><span class="num">05</span><div class="flow-ic">💬</div><h4>深度交互</h4><p>与世界中任意 Agent 自由对话</p></div>
+      </div>
+      <div style="margin-top:24px;text-align:center">
+        <button class="btn btn-primary" onclick="go('console')">进入预测工作台 →</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>新品 / 活动上线前的排练实验室</div>
+        <div class="sec-desc">新品上市前，推演首发转化与口碑走向；社媒活动前，预演传播路径与翻车风险。让高不确定性的决策在零成本的数字沙盒里先跑一遍——在无数次仿真之后，再做真实世界的投入。</div>
+      </div>
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>微观 · 用户态度的望远镜</div>
+        <div class="sec-desc">从 VOC 原文到可计算的用户智能体：看清每个分群为什么买、为什么不买、被哪个痛点卡住。把散落的用户语料，变成可以反复推演的结构化基座。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONSOLE ================= -->
+  <section class="page" id="page-console">
+    <div class="page-head">
+      <h1 class="page-title">预测工作台</h1>
+      <p class="page-sub">投喂种子信息，用自然语言描述预测需求。点击"构建数字世界"，观察引擎跑完五步流水线。</p>
+    </div>
+
+    <div class="glass sec">
+      <div class="flow" id="flowLive">
+        <div class="flow-step" data-s="0"><span class="num">01</span><div class="flow-ic">🧬</div><h4>图谱构建</h4><p>GraphRAG</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step" data-s="1"><span class="num">02</span><div class="flow-ic">🎭</div><h4>环境设置</h4><p>人格生成</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step" data-s="2"><span class="num">03</span><div class="flow-ic">🌊</div><h4>模拟仿真</h4><p>社会演化</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step" data-s="3"><span class="num">04</span><div class="flow-ic">📄</div><h4>报告生成</h4><p>ReportAgent</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step" data-s="4"><span class="num">05</span><div class="flow-ic">💬</div><h4>深度交互</h4><p>Agent 对话</p></div>
+      </div>
+    </div>
+
+    <div class="console-grid">
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>输入种子信息</div>
+        <div class="field">
+          <label>预测场景</label>
+          <select id="scene">
+            <option value="product">新品上市预测 · 首发转化、口碑与用户反馈</option>
+            <option value="social">社媒活动预测 · 内容传播效果与翻车风险</option>
+            <option value="category">品类机会预测 · 需求缺口与切入排序</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>种子材料</label>
+          <textarea id="seed" rows="4" placeholder="粘贴新品说明 / 活动方案 / 品类洞察…">某新品计划下月上市：主打"更安静、更省心"的卖点，定价较现有主力款高约 15%；首批面向老用户与达人内测，配套 30 天无忧退。社媒侧准备一轮种草内容 + 2 位垂类达人。用户研究基座显示：痛点击中者占比约 10%、价格敏感者约 18%。</textarea>
+        </div>
+        <div class="field">
+          <label>预测需求（自然语言）</label>
+          <input id="question" value="政策落地首周，市民情绪与出行行为会如何演化？主要争议点是什么？">
+          <div class="chips" id="qChips"></div>
+        </div>
+        <div class="field">
+          <label>数字世界规模：<b id="popLabel" style="color:var(--cyan)">512</b> 个智能体</label>
+          <input type="range" id="pop" min="128" max="2048" step="128" value="512" style="padding:0">
+        </div>
+        <div class="field">
+          <label>社交网络拓扑</label>
+          <select id="topo">
+            <option value="pa">无标度（偏好依附）· 信息经枢纽扩散</option>
+            <option value="sw">小世界（高聚类）· 回声室最强</option>
+            <option value="er">随机网络 · 对照基线</option>
+          </select>
+        </div>
+        <div class="field mc-row">
+          <label class="mc-label"><span>蒙特卡洛复算</span><span class="mc-hint">多次仿真取均值±95%CI</span></label>
+          <label class="switch"><input type="checkbox" id="mcToggle"><span class="slider-sw"></span></label>
+        </div>
+        <div class="field" id="mcNField" style="display:none">
+          <label>复算次数：<b id="mcNLabel" style="color:var(--cyan)">30</b> 次</label>
+          <input type="range" id="mcN" min="20" max="100" step="10" value="30" style="padding:0">
+        </div>
+        <button class="btn btn-primary" id="runBtn" style="width:100%" onclick="runSim()">⚡ 构建数字世界并推演</button>
+      </div>
+
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>引擎日志</div>
+        <div class="terminal" id="term">
+          <div class="log-line"><span class="log-t">[待命]</span><span class="log-info">MiroFish 引擎就绪，等待种子信息注入…</span></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-label"><span id="progStage">未开始</span><span id="progPct">0%</span></div>
+          <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px">
+          <button class="btn btn-sec" style="flex:1" onclick="go('world')" id="toWorld" disabled>查看数字世界</button>
+          <button class="btn btn-sec" style="flex:1" onclick="go('report')" id="toReport" disabled>查看预测报告</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WORLD ================= -->
+  <section class="page" id="page-world">
+    <div class="page-head">
+      <h1 class="page-title">数字世界 <span class="badge" id="worldTag">未生成</span></h1>
+      <p class="page-sub">这是引擎为你的种子信息构建的平行社会。每个节点是一个拥有独立人格的智能体，连线是它们之间的社会关系。以"上帝视角"注入变量，观察群体演化。</p>
+    </div>
+
+    <div id="worldEmpty" class="glass sec">
+      <div class="empty"><div class="big">🌐</div>还没有数字世界。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>构建一个。</div>
+    </div>
+
+    <div id="worldContent" style="display:none">
+      <div class="card-grid">
+        <div class="glass stat"><div class="stat-label">🧑‍🤝‍🧑 智能体总数</div><div class="stat-val" id="wPop">0</div><div class="stat-sub">分属若干人格群落</div></div>
+        <div class="glass stat"><div class="stat-label">🔗 社会关系</div><div class="stat-val" id="wEdge">0</div><div class="stat-sub">GraphRAG 构建</div></div>
+        <div class="glass stat"><div class="stat-label">😊 群体情绪</div><div class="stat-val" id="wMood">中性</div><div class="stat-sub" id="wMoodSub">实时演化中</div></div>
+        <div class="glass stat"><div class="stat-label">🔥 群体极化</div><div class="stat-val" id="wPol">0%</div><div class="stat-sub">立场|x|&gt;0.5 占比</div></div>
+        <div class="glass stat"><div class="stat-label">⏱️ 仿真时刻</div><div class="stat-val" id="wTick">T+0</div><div class="stat-sub">动态时间记忆</div></div>
+        <div class="glass stat"><div class="stat-label">🕸️ 网络拓扑</div><div class="stat-val" id="wTopo" style="font-size:15px">—</div><div class="stat-sub">信息扩散结构</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="glass sec">
+          <div class="sec-title"><span class="bar"></span>智能体社会网络</div>
+          <div id="graph" class="chart"></div>
+        </div>
+        <div class="glass sec">
+          <div class="sec-title"><span class="bar"></span>上帝视角 · 注入变量</div>
+          <div class="sec-desc">调整以下干预变量（即你的营销 / 运营杠杆），观察用户态度如何重新演化。这正是该引擎的核心：在用户研究基座上反复试错、看清每个"如果"。</div>
+          <div class="field">
+            <label><span id="v1name">卖点透明度</span>：<b id="v1l" style="color:var(--cyan)">60</b>%</label>
+            <input type="range" id="v1" min="0" max="100" value="60" oninput="onVar()">
+          </div>
+          <div class="field">
+            <label><span id="v2name">痛点解决力度</span>：<b id="v2l" style="color:var(--cyan)">40</b>%</label>
+            <input type="range" id="v2" min="0" max="100" value="40" oninput="onVar()">
+          </div>
+          <div class="field">
+            <label><span id="v3name">达人/口碑投放</span>：<b id="v3l" style="color:var(--cyan)">30</b>%</label>
+            <input type="range" id="v3" min="0" max="100" value="30" oninput="onVar()">
+          </div>
+          <div id="moodChart" class="chart-sm" style="height:200px"></div>
+        </div>
+      </div>
+
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>群体情绪演化时间线</div>
+        <div id="evoChart" class="chart"></div>
+      </div>
+
+      <div class="glass sec" id="ciWrap" style="display:none">
+        <div class="sec-title"><span class="bar"></span>蒙特卡洛置信区间 · 负面占比演化（均值 ± 95%CI）</div>
+        <div class="sec-desc">阴影为 N 次复算中负面% 的 95% 置信带。带越宽，说明该时间点的结果对随机性越敏感、越不可靠。</div>
+        <div id="ciChart" class="chart"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= REPORT ================= -->
+  <section class="page" id="page-report">
+    <div class="page-head">
+      <h1 class="page-title">预测报告</h1>
+      <p class="page-sub">ReportAgent 携带完整工具集，与仿真后的数字世界深度交互，产出结构化预测。你还能在下方直接与世界中的智能体对话。</p>
+    </div>
+
+    <div id="reportEmpty" class="glass sec">
+      <div class="empty"><div class="big">📄</div>还没有预测报告。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>运行一次推演。</div>
+    </div>
+
+    <div id="reportContent" style="display:none">
+      <div class="glass report-box">
+        <div class="rep-verdict">
+          <div class="rep-gauge"><div id="gauge" style="width:150px;height:150px"></div></div>
+          <div>
+            <h3 id="repTitle">预测结论</h3>
+            <p id="repSummary"></p>
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-bottom:24px">
+          <div id="probChart" class="chart-sm"></div>
+          <div id="factorChart" class="chart-sm"></div>
+        </div>
+
+        <div class="rep-section">
+          <h4>🔑 关键推演发现</h4>
+          <ul class="rep-list" id="findings"></ul>
+        </div>
+        <div class="rep-section">
+          <h4>⚠️ 风险与争议点</h4>
+          <ul class="rep-list" id="risks"></ul>
+        </div>
+        <div class="rep-section">
+          <h4>🎯 建议动作</h4>
+          <ul class="rep-list" id="actions"></ul>
+        </div>
+      </div>
+
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>与智能体对话</div>
+        <div class="sec-desc">选一个智能体，问它对预测事件的看法。它会基于自己的人格与在仿真中的经历回答你。</div>
+        <div class="agent-list" id="agentList"></div>
+        <div class="chat-box" id="chatBox"></div>
+        <div class="chat-input">
+          <input class="field" id="chatInput" placeholder="问问 TA 怎么看这件事…" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-primary" onclick="sendChat()">发送</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ALGO ================= -->
+  <section class="page" id="page-algo">
+    <div class="page-head">
+      <h1 class="page-title">算法引擎 <span class="badge" id="algoTag">未运行</span></h1>
+      <p class="page-sub">这一页把 MiroFish / OASIS 的仿真机制真正落到了代码里。下面的每一条数据都来自一个在你浏览器里逐时间步运行的多智能体模型（Agent-Based Model）——大模型负责的"自然语言生成"用规则化决策策略替代，但激活、推荐、动作决策、观点演化、记忆更新这一整套算法骨架是完整、可复算的。</p>
+    </div>
+
+    <div id="algoEmpty" class="glass sec">
+      <div class="empty"><div class="big">⚙️</div>数值引擎尚未运行。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>构建并推演一次。</div>
+    </div>
+
+    <div id="algoContent" style="display:none">
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>核心算法 · 每时间步执行的五个步骤</div>
+        <div class="sec-desc">引擎对 <b id="algoN" style="color:var(--cyan)">0</b> 个智能体、共 <b id="algoT" style="color:var(--cyan)">12</b> 个时间步，逐步执行以下循环。这是对 OASIS <code>env.step()</code> 主循环的忠实简化实现。</div>
+        <pre class="algo-pre">
+<b class="ac1">// 0. 初始化：人格生成 + 社交网络（偏好依附 + 同质性）</b>
+for each agent i:
+    x_i   ← 立场/态度 ∈ [-1,+1]      (按人格群落先验采样)
+    ε_i   ← 有界信心阈值 ∈ [0.15,0.6] (openness, 越大越易被说服)
+    a_i   ← 活跃度 ∈ [0,1]           (决定被激活概率)
+    w_i   ← 影响力 ∝ 粉丝数 (+KOL加成)
+followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易关注)
+
+<b class="ac2">for t = 0 … T:  // 逐时间步社会演化</b>
+  <b class="ac1">1. 激活 Activation</b>
+     arousal(t) = e^(-t/4)                       // 事件初期更亢奋
+     P_active(i) = a_i · (0.35 + 0.65·arousal) · (1 - 0.25·信息公开度)
+  <b class="ac1">2. 推荐 Recommendation（Reddit hot-score + 二维嵌入相似度）</b>
+     hot(p)  = sign(ups-downs)·log10(max(|ups-downs|,1)+1) + 0.35·created(p)
+     sim(a,p)= 0.65·(1 - |x_i - stance(p)|/2) + 0.35·(1 - |y_i - y_p|/2)  // 立场一致 + 潜在维度一致
+     rank(p) = hot(p) + 0.8·sim(a,p)                         // 个性化加权 → 制造信息茧房
+     feed_i  = TopK(rank, K=5) 取自 followees 的帖子 + 全局热帖
+  <b class="ac1">3. 动作决策 Action（规则策略替代 LLM 推理）</b>
+     agree = 1 - |x_i - stance(p)|/2
+     agree>1-ε → LIKE / REPOST(放大)  ·  agree<ε → DISLIKE / COMMENT(反驳)  ·  其余 → do_nothing
+     以概率 a_i·(0.2+0.5·|x_i|) 发帖 CREATE_POST，立场≈x_i
+     高认同且作者有影响力 → FOLLOW
+  <b class="ac1">4. 观点更新 Opinion Dynamics（有界信心 + 社会影响 DeGroot）</b>
+     对 feed 中满足 |x_i - stance(p)| &lt; ε_i 的帖子：
+        x_i ← x_i + μ · Σ w_p·(stance(p) - x_i) / Σ w_p     μ = 0.25·(1+0.5·KOL介入)
+     外生"上帝变量"注入：
+        x_i += 信息公开度·0.015·(理性基线 - x_i)
+        若群落先验为负: x_i += 补偿力度·0.035·(0.6 - x_i)
+     x_i ← clip(x_i, -1, +1)
+  <b class="ac1">5. 记忆 & 统计 Memory（Zep episode 同步）</b>
+     记录动作计数、更新帖子 ups/downs、老化清理 3 步前的帖子
+     态度分布 → 正面(x&gt;0.15) / 中性 / 负面(x&lt;-0.15)，方差=极化度
+</pre>
+      </div>
+
+      <div class="two-col">
+        <div class="glass sec">
+          <div class="sec-title"><span class="bar"></span>逐时间步运行轨迹</div>
+          <div class="sec-desc">下表由引擎实际计算得出，每一行是一个时间步的真实统计。</div>
+          <div class="algo-table-wrap">
+            <table class="algo-table">
+              <thead><tr><th>T</th><th>激活</th><th>发帖</th><th>点赞</th><th>转发</th><th>评论</th><th>均值 x̄</th><th>负面%</th></tr></thead>
+              <tbody id="algoStepBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="glass sec">
+          <div class="sec-title"><span class="bar"></span>动作空间分布随时间演化</div>
+          <div class="sec-desc">OASIS 动作空间在本模型中的实际触发量（发帖/点赞/转发/评论）。</div>
+          <div id="actChart" class="chart-sm" style="height:300px"></div>
+        </div>
+      </div>
+
+      <div class="glass sec" id="mcWrap" style="display:none">
+        <div class="sec-title"><span class="bar"></span>蒙特卡洛稳定性 · 终态均值意见的分布</div>
+        <div class="sec-desc">同一种网络、不同随机流重复仿真 N 次，终态群体均值意见的分布。分布越窄、标准差越小，推演结论越稳健可靠（统计显著性越高）。</div>
+        <div class="mc-stats" id="mcStats"></div>
+        <div id="mcHist" class="chart-sm" style="height:260px"></div>
+      </div>
+
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>关键实现说明</div>
+        <div class="sec-desc" style="line-height:1.9">
+          · <b style="color:var(--cyan)">确定性可复算 + 蒙特卡洛</b>：引擎用种子化伪随机数（mulberry32），单跑时同参数结果一致、调"上帝变量"后的差异完全可归因到变量本身；打开<b>蒙特卡洛开关</b>后会用不同随机流重复仿真 N 次，输出均值 ± 95% 置信区间与终态分布直方图，让结论带统计显著性。<br>
+          · <b style="color:var(--cyan)">被替代的部分</b>：真实 MiroFish 里第 3 步的动作决策与第 5 步的发帖文本由 LLM（Qwen-plus / GPT-4o）生成；此处用<b>基于立场差 + 人格特质的规则化策略</b>近似，保留决策的逻辑结构，去掉需要大模型的语言生成。<br>
+          · <b style="color:var(--cyan)">忠实保留且已深化</b>：激活机制、Reddit hot-score 推荐排序、动作空间选择逻辑、有界信心 + DeGroot 社会影响的观点动力学、Zep 式记忆计数——都直接实现；并新增<b>二维嵌入相似度推荐</b>（立场 + 潜在维度，制造信息茧房）与<b>三种网络拓扑</b>（无标度/小世界/随机）可选。<br>
+          · <b style="color:var(--cyan)">干预变量</b>：卖点透明度 / 痛点解决力度 / 达人·口碑投放（语义随场景切换）是作为外生力项注入到第 1、4 步的真实参数；拖动滑杆会真正重跑数值引擎并重算全部曲线（MC 模式下为节省实时算力，拖动时用较小样本，点"重新构建"得到完整样本）。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ARCH ================= -->
+  <!-- ================= BASE ================= -->
+  <section class="page" id="page-base">
+    <div class="page-head">
+      <h1 class="page-title">用户基座 <span class="badge">8 分群</span></h1>
+      <p class="page-sub">这是仿真的人格来源。每个智能体不是一个虚构角色，而是从你的用户研究体系中聚类出来的真实用户分群——态度、活跃度、忠诚度、价格—品质取向，全部来自 VOC 语料与标签体系。引擎直接读取这张表。</p>
+    </div>
+    <div class="card-grid">
+      <div class="glass stat"><div class="stat-label">🧬 用户分群</div><div class="stat-val" id="baseSeg">8</div><div class="stat-sub">来自 VOC 聚类 / 用户画像</div></div>
+      <div class="glass stat"><div class="stat-label">🏷️ 标签维度</div><div class="stat-val">9+</div><div class="stat-sub">画像/动机/阻碍/需求…</div></div>
+      <div class="glass stat"><div class="stat-label">📊 态度空间</div><div class="stat-val">x·y</div><div class="stat-sub">态度 × 价格—品质取向</div></div>
+      <div class="glass stat"><div class="stat-label">🔌 数据接入</div><div class="stat-val">JSON</div><div class="stat-sub">VOC / 类目洞察导出</div></div>
+    </div>
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>用户分群先验（仿真人格来源）</div>
+      <div class="sec-desc">立场 x = 对该预测对象的态度（-1 抵触·不买 ↔ +1 接受·种草·购买意向）；价格—品质取向 y = -1 价格敏感 ↔ +1 品质/体验导向。占比 = 该分群在基座中的相对规模。</div>
+      <div class="algo-table-wrap">
+        <table class="algo-table">
+          <thead><tr><th>分群</th><th>占比</th><th>态度 x</th><th>价格—品质 y</th><th>活跃度</th><th>倡导者</th><th>对应标签体系</th></tr></thead>
+          <tbody id="baseBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>如何把你的用户数据接进来</div>
+        <div class="sec-desc">基座当前为研究原型的内置示例分群。要换成你真实的用户研究数据，只需提供一份结构化导出（VOC 聚类结果 / 类目洞察分群），按下方 schema 替换即可——引擎逻辑不变，换的是"人格来源"。</div>
+        <div class="algo-pre"><code>{
+  "segments": [
+    {
+      "name": "价格敏感者",
+      "weight": 0.18,
+      "x": -0.15,        // 态度先验
+      "y": -0.70,        // 价格—品质取向
+      "act": 0.55,       // 活跃度 0–1
+      "advocate": false, // 是否倡导者/KOL
+      "tags": ["用户画像:价格敏感","动机:性价比","阻碍:预算有限"]
+    }
+  ]
+}</code></div>
+      </div>
+      <div class="glass sec">
+        <div class="sec-title"><span class="bar"></span>与你的研究体系对齐</div>
+        <div class="sec-desc">这张基座表直接对接你已经建好的两套工具：</div>
+        <ul class="base-list">
+          <li><b>voc-report</b>：九大标签模块（用户画像分群 / 购买动机 / 使用场景 / 使用阻碍 / 忠诚度 / 改进建议 / 十三种需求）→ 决定每个分群的 x、y 与痛点。</li>
+          <li><b>category-insight-hub</b>：市场细分、JTBD、需求四象限、价格带 → 决定分群构成、需求轴与干预杠杆。</li>
+        </ul>
+        <div class="sec-desc" style="margin-top:12px">下一步可做的：把 VOC 聚类结果一键导出为该 schema，让真实分群驱动仿真，而非内置示例。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="page-arch">
+    <div class="page-head">
+      <h1 class="page-title">架构说明</h1>
+      <p class="page-sub">MiroFish 构建于 CAMEL-AI 开源的 OASIS 社会仿真引擎之上，融合 GraphRAG 图谱与 Zep 长期记忆，形成完整的"提取 → 建模 → 演化 → 报告 → 交互"闭环。</p>
+    </div>
+
+    <div class="arch-grid">
+      <div class="glass arch-card"><div class="arch-ic">🧬</div><h4>种子提取 & GraphRAG</h4><p>从新闻、政策、金融信号、小说文本中抽取实体与关系，构建高保真知识图谱，为每个智能体注入个体记忆与集体记忆。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">🎭</div><h4>人格生成引擎</h4><p>基于图谱实体自动生成拥有独立性格、立场、行为逻辑的智能体，并完成 Agent 配置注入，构成一个可信的数字社会。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">🌊</div><h4>双平台并行仿真</h4><p>底层基于 OASIS 引擎，支持双平台并行模拟，动态更新时间记忆，让数千智能体自由互动、社会演化。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">📄</div><h4>ReportAgent</h4><p>携带丰富工具集，在仿真结束后与数字世界深度交互，自动解析预测需求，产出可读的结构化预测报告。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">💬</div><h4>深度交互层</h4><p>用户可与世界中任意智能体对话，也可与 ReportAgent 交互追问，把黑箱预测变成可对话、可审视的过程。</p></div>
+      <div class="glass arch-card"><div class="arch-ic">🌍</div><h4>God's-Eye 变量注入</h4><p>从"上帝视角"动态注入变量，精确推演不同干预下的未来轨迹——这是决策排练的核心能力。</p></div>
+    </div>
+
+    <div class="glass sec">
+      <div class="sec-title"><span class="bar"></span>技术栈</div>
+      <div class="tech-row">
+        <div class="tech"><b>前端</b> Node.js 18+ · localhost:3000</div>
+        <div class="tech"><b>后端</b> Python 3.11–3.12 · uv · localhost:5001</div>
+        <div class="tech"><b>仿真引擎</b> OASIS / CAMEL-AI</div>
+        <div class="tech"><b>图谱</b> GraphRAG</div>
+        <div class="tech"><b>记忆</b> Zep Cloud</div>
+        <div class="tech"><b>LLM</b> OpenAI SDK 格式 · Qwen-plus</div>
+        <div class="tech"><b>部署</b> 源码 / Docker Compose</div>
+        <div class="tech"><b>许可证</b> AGPL-3.0</div>
+      </div>
+      <div class="sec-desc" style="margin-top:20px">开源仓库：<b style="color:var(--cyan)">github.com/666ghj/MiroFish</b> · 由盛大集团战略孵化。本页面为基于其公开架构文档制作的交互式演示原型，仿真数据由前端确定性算法模拟，仅供研究理解引擎工作流之用。</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ---------- cursor ---------- */
+const cur=document.getElementById('cur'),curGlow=document.getElementById('curGlow');let parts=[];
+function moveCur(e){cur.style.left=curGlow.style.left=e.clientX+'px';cur.style.top=curGlow.style.top=e.clientY+'px';mkPart(e.clientX,e.clientY)}
+function mkPart(x,y){if(parts.length>16){parts[0].remove();parts.shift()}const p=document.createElement('div');p.className='particle';p.style.left=x+'px';p.style.top=y+'px';document.body.appendChild(p);parts.push(p);let o=.8,s=1;(function a(){o-=.03;s-=.04;p.style.opacity=o;p.style.transform=`translate(-50%,-50%) scale(${s})`;if(o>0)requestAnimationFrame(a);else{p.remove();parts=parts.filter(i=>i!==p)}})()}
+document.addEventListener('mousemove',moveCur);
+function bindHover(){document.querySelectorAll('.btn,.nav-item,.side-item,.stat,.chip,.agent-pill,.theme-toggle,.flow-step,.arch-card,.tech').forEach(el=>{el.onmouseenter=()=>{cur.style.width=cur.style.height='36px';curGlow.style.width=curGlow.style.height='130px'};el.onmouseleave=()=>{cur.style.width=cur.style.height='18px';curGlow.style.width=curGlow.style.height='90px'}})}
+
+/* ---------- theme ---------- */
+let charts=[];
+document.getElementById('themeBtn').onclick=function(){document.body.classList.toggle('dark');document.body.classList.toggle('light');this.textContent=document.body.classList.contains('dark')?'🌙':'☀️';charts.forEach(c=>c&&c.dispose&&applyCharts())};
+
+/* ---------- nav ---------- */
+function go(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-item,.side-item').forEach(x=>x.classList.toggle('active',x.dataset.page===p));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(p==='world'&&state.done)setTimeout(drawWorld,50);
+  if(p==='algo'&&state.done)setTimeout(drawAlgo,50);
+  if(p==='report'&&state.done)setTimeout(drawReport,50);
+  if(p==='base')renderBase();
+  bindHover();
+}
+document.querySelectorAll('.nav-item,.side-item').forEach(el=>el.onclick=()=>go(el.dataset.page));
+
+/* ---------- 用户基座页渲染 ---------- */
+function renderBase(){
+  const tb=document.getElementById('baseBody');if(!tb)return;tb.innerHTML='';
+  SEGMENTS.forEach((n,i)=>{
+    const[x,act,kol,y]=SEG_PRIOR[i];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><b>${n}</b></td><td>${(SEG_WEIGHT[i]*100).toFixed(0)}%</td><td>${x.toFixed(2)}</td><td>${y.toFixed(2)}</td><td>${act.toFixed(2)}</td><td>${kol?'是':'否'}</td><td style="font-size:12px;color:var(--cyan)">${SEG_TAGS[i]}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('baseSeg').textContent=SEGMENTS.length;
+}
+
+/* ---------- counters ---------- */
+function animNum(el,t){let s=0,st=performance.now();(function u(n){let p=Math.min((n-st)/1400,1);el.textContent=Math.floor((s+(t-s)*(1-Math.pow(1-p,4)))).toLocaleString();if(p<1)requestAnimationFrame(u)})(performance.now())}
+setTimeout(()=>document.querySelectorAll('.counter').forEach(c=>animNum(c,+c.dataset.target)),400);
+
+/* ---------- scene presets ---------- */
+/* ---------- 用户研究基座：用户分群作为仿真人格来源 ---------- */
+// 8 个用户研究分群（对接 VOC 标签体系的用户画像分群 / 忠诚度 / 动机 / 需求）
+const SEGMENTS=['尝鲜型用户','价格敏感者','品质党','观望群体','痛点击中者','KOL/达人','差评传播者','竞品用户'];
+// 每分群先验：[x立场均值, 活跃度, 是否倡导者/KOL, y价格—品质取向]
+// x=对该新品/活动/品类的态度（-1 抵触·不买 ↔ +1 接受·种草·购买意向）
+const SEG_PRIOR=[
+  [ 0.55,0.78,0, 0.30],[-0.15,0.55,0,-0.70],[ 0.35,0.50,0, 0.65],[-0.05,0.30,0, 0.00],
+  [-0.35,0.65,0, 0.10],[ 0.40,0.90,1, 0.20],[-0.50,0.70,0,-0.30],[-0.40,0.45,0, 0.10]
+];
+// 分群在用户研究基座中的相对规模（占比）；用于规模构成说明，后续将驱动 agent 抽样权重
+const SEG_WEIGHT=[0.10,0.18,0.15,0.20,0.10,0.04,0.08,0.15];
+// 每个分群对应的 VOC 标签体系（说明性，用于基座页展示）
+const SEG_TAGS=['用户画像 / 动机 / 阻碍 / 需求','用户画像 / 忠诚度 / 动机','用户画像 / 动机 / 需求','用户画像 / 忠诚度','用户画像 / 阻碍 / 改进建议','忠诚度 / 动机（倡导者）','忠诚度 / 阻碍（流失风险）','用户画像 / 竞品'];
+const SCENES={
+  product:{q:['首发转化和口碑会如何演化？','哪些分群最可能差评反弹？','定价/卖点怎么调能抬高接受度？'],mood:'分化',title:'新品首发：尝鲜者带动、价格敏感者观望，口碑决定第二周斜率',
+    findings:[['首周','尝鲜型与品质党率先种草，自发生成初期正向声量'],['价格带','价格敏感者与痛点击中者对定价/卖点高度敏感，决定转化拐点'],['口碑传导','首周真实体验口碑直接决定观望群体的跟进斜率']],
+    risks:[['预期落差','卖点过度承诺会拉高预期，放大真实体验落差 → 差评'],['差评扩散','痛点击中但未满足者转为差评传播者，拖累评分与转化']],
+    actions:[['首周护盘','集中客服/达人资源快速响应差评，稳住口碑基线'],['分层沟通','对价格敏感者给组合优惠，对品质党强调材料/体验'],['放大口碑','激励满意用户产出真实评测，撬动观望群体转化']]},
+  social:{q:['这条内容会不会爆 / 会不会翻车？','哪个分群会放大传播？','KOL 投放投在哪类最有效？'],mood:'不确定',title:'社媒活动：内容契合度决定起始声量，KOL 与激励决定扩散上限',
+    findings:[['启动期','内容主题与受众动机契合度高则初始互动强'],['放大期','KOL/达人节点触达跨群桥接，显著提升扩散速率'],['风险期','差评传播者与痛点击中者易在被忽视处引爆二次舆情']],
+    risks:[['翻车点','敏感表述/预期管理不足会被差评传播者放大'],['空转','内容—受众错位时，激励换不来真实互动']],
+    actions:[['前置测试','小流量测内容契合度再放量'],['KOL 匹配','预算押在受众同质性高的达人而非泛粉'],['实时护盘','埋点监测差评信号，快速响应']]},
+  category:{q:['这个品类机会点是否成立？','哪类需求最值得切入？','现有品类结构该怎么优化？'],mood:'机会',title:'品类机会：未被满足的需求 + 高忠诚人群重合度决定机会大小',
+    findings:[['机会识别','需求缺口最大的分群规模可观，对应机会值得切入'],['人群匹配','品质党与痛点击中者的需求重合度高，是优先人群'],['结构优化','价格敏感者占比高，提示需入门款补全价格带']],
+    risks:[['伪需求','若仅由少量极端用户驱动，机会规模有限'],['供给错配','机会点与现有供给能力不匹配时难以落地']],
+    actions:[['验证需求','用 VOC 回看需求频次与强度'],['切入排序','按 需求强度×人群规模×供给可行 排序机会'],['补全供给','针对价格敏感者补入门款']]}
+};
+
+/* ---------- personas & group priors（由用户研究基座驱动） ---------- */
+// PERSONAS 即用户分群名列表；三场景共用 SEGMENTS
+const PERSONAS=SEGMENTS;
+const PCOLOR=['#00d4ff','#a855f7','#ff6b9d','#10b981','#fbbf24','#3b82f6','#f97316','#22d3ee'];
+// 引擎直接读取 GROUPS[scene]；三场景共用同一套分群先验（基座统一）。
+// 元素：[x立场均值, 活跃度, 是否倡导者/KOL, y价格—品质取向]，由 SEG_PRIOR 提供
+const GROUPS={product:SEG_PRIOR,social:SEG_PRIOR,category:SEG_PRIOR};
+// 上帝变量语义随场景切换；底层 v1/v2/v3 计算逻辑不变，仅注入语义不同
+const VARS_LABEL={
+  product:{v1:'卖点透明度',v2:'痛点解决力度',v3:'达人/口碑投放'},
+  social:{v1:'内容契合度',v2:'互动/激励力度',v3:'KOL 投放强度'},
+  category:{v1:'机会清晰度',v2:'需求覆盖度',v3:'生态/供给准备'}
+};
+// 社交网络拓扑：决定信息如何在群体中流动
+const TOPOS={
+  pa:{name:'无标度（偏好依附）',desc:'少数枢纽节点高度连接，信息易通过它们快速扩散——最接近真实社交平台'},
+  sw:{name:'小世界（高聚类+短路径）',desc:'强同群聚类、跨群只靠少量桥接，回声室效应最强'},
+  er:{name:'随机网络',desc:'连接均匀分布、无结构偏置，作为对照基线'}
+};
+
+/* ---------- state ---------- */
+const state={done:false,pop:512,edges:0,scene:'product',mood:'',graphData:null,tick:12,engine:null,T:12,topo:'pa',mc:false,mcN:30};
+
+document.getElementById('pop').oninput=function(){document.getElementById('popLabel').textContent=this.value};
+function updateVarLabels(){const lab=VARS_LABEL[state.scene]||VARS_LABEL.product;document.getElementById('v1name').textContent=lab.v1;document.getElementById('v2name').textContent=lab.v2;document.getElementById('v3name').textContent=lab.v3}
+function refreshChips(){const s=document.getElementById('scene').value;state.scene=s;const box=document.getElementById('qChips');box.innerHTML='';SCENES[s].q.forEach(q=>{const c=document.createElement('div');c.className='chip';c.textContent=q;c.onclick=()=>{document.getElementById('question').value=q;bindHover()};box.appendChild(c)});bindHover();updateVarLabels()}
+document.getElementById('scene').onchange=refreshChips;refreshChips();
+document.getElementById('mcToggle').onchange=function(){document.getElementById('mcNField').style.display=this.checked?'block':'none'};
+document.getElementById('mcN').oninput=function(){document.getElementById('mcNLabel').textContent=this.value};
+
+/* ================================================================
+   MiroFish 数值引擎 —— OASIS 风格多智能体社会仿真（确定性可复算）
+   ================================================================ */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function clip(v,lo,hi){return v<lo?lo:v>hi?hi:v}
+function meanOf(a){let s=0;for(const x of a)s+=x;return s/a.length}
+function sdOf(a){const m=meanOf(a);let s=0;for(const x of a)s+=(x-m)*(x-m);return Math.sqrt(s/a.length)}
+function pct(a,q){const b=a.slice().sort((x,y)=>x-y);const i=Math.min(b.length-1,Math.max(0,Math.round((q/100)*(b.length-1))));return b[i]}
+// 个性化推荐相似度：0.65 立场一致 + 0.35 第二潜在维度一致（嵌入相似度，制造信息茧房）
+function sim(a,p){return 0.65*(1-Math.abs(a.x-p.stance)/2)+0.35*(1-Math.abs(a.y-(p.y||0))/2)}
+
+const ENGINE={
+  agents:[], edges:[], scene:'product', N:0, topo:'pa',
+  // 步骤0：人格生成 + 建网（支持三种拓扑）
+  build(scene,N,seed,topo='pa'){
+    this.scene=scene;this.N=N;this.topo=topo;const rnd=mulberry32(seed);
+    const gp=GROUPS[scene];const k=gp.length;
+    const ags=[];
+    for(let i=0;i<N;i++){
+      const g=i%k;const[mean,act,kol,ym]=gp[g];
+      // 立场/潜在维度按群落先验高斯采样（Box-Muller）
+      const u1=Math.max(1e-6,rnd()),u2=rnd(),u3=Math.max(1e-6,rnd()),u4=rnd();
+      const g1=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+      const g2=Math.sqrt(-2*Math.log(u3))*Math.cos(2*Math.PI*u4);
+      ags.push({
+        id:i, g,
+        x0: clip(mean+g1*0.22,-1,1),     // 立场
+        y0: clip(ym+g2*0.18,-1,1),       // 第二潜在维度
+        x:0, y:0,
+        eps: 0.15+rnd()*0.45,             // 有界信心阈值
+        act: clip(act+(rnd()-.5)*0.2,.05,.98),
+        infl: (kol? 3+rnd()*4 : 0.5+rnd()*1.5), // 影响力
+        kol, followees:[]
+      });
+    }
+    const edges=this._buildNet(ags,rnd,topo);
+    this.agents=ags;this.edges=edges;
+    return {agents:ags,edges};
+  },
+  _buildNet(ags,rnd,topo){
+    const N=ags.length;const edges=[];
+    if(topo==='er'){ // Erdős–Rényi 随机
+      const m=Math.max(2,Math.floor(N/50));
+      for(let i=1;i<N;i++){const cnt=Math.min(m,i);const picked=new Set();let tr=0;
+        while(picked.size<cnt&&tr<cnt*12){tr++;const j=Math.floor(rnd()*i);if(j!==i)picked.add(j);}
+        picked.forEach(j=>{ags[i].followees.push(j);edges.push([i,j])});}
+      return edges;
+    }
+    if(topo==='sw'){ // Watts–Strogatz 小世界：环形近邻 + 偏同质性重连
+      const half=Math.max(1,Math.floor(Math.max(2,Math.floor(N/60))/2));
+      for(let i=0;i<N;i++)for(let d=1;d<=half;d++){const j=(i+d)%N;edges.push([i,j]);ags[i].followees.push(j);}
+      for(let e=0;e<edges.length;e++){
+        if(rnd()<0.18){const i=edges[e][0];let best=-1,bestS=-1,tr=0;
+          while(tr<8){tr++;const j=Math.floor(rnd()*N);if(j===i||ags[i].followees.includes(j))continue;
+            const s=1-Math.abs(ags[i].x0-ags[j].x0)/2;if(s>bestS){bestS=s;best=j}}
+          if(best>=0){const idx=ags[i].followees.indexOf(edges[e][1]);if(idx>=0)ags[i].followees.splice(idx,1);
+            edges[e][1]=best;ags[i].followees.push(best);}}
+      }
+      return edges;
+    }
+    // 默认 pa：偏好依附（无标度）+ 同质性（原始行为）
+    const deg=new Array(N).fill(1);let totDeg=N;const m=Math.min(6,Math.max(3,Math.floor(N/60)));
+    for(let i=1;i<N;i++){
+      const cand=new Set();let tries=0;
+      while(cand.size<Math.min(m,i)&&tries<m*6){
+        tries++;
+        let r=rnd()*totDeg,j=0,acc=0;for(;j<i;j++){acc+=deg[j];if(acc>=r)break;}
+        if(j>=i)j=i-1;
+        const homo=1-Math.abs(ags[i].x0-ags[j].x0)/2;
+        if(rnd()<0.35+0.6*homo)cand.add(j);
+      }
+      cand.forEach(j=>{ags[i].followees.push(j);deg[j]++;deg[i]++;totDeg+=2;edges.push([i,j])});
+    }
+    return edges;
+  },
+  // 仿真随机数种子：仅由上帝变量决定 → 同参数可复算
+  _simSeed(v){return 9973+Math.floor(v.v1*97)+Math.floor(v.v2*97)*101+Math.floor(v.v3*97)*10007},
+  // 步骤1-5：逐时间步社会演化。vars={v1信息公开,v2补偿,v3KOL} ∈[0,1]
+  simulate(vars,T,mcSeed){
+    const {v1,v2,v3}=vars;const ags=this.agents;const N=this.N;const gp=GROUPS[this.scene];
+    const rnd=mulberry32(mcSeed!==undefined?mcSeed:this._simSeed(vars));
+    for(const a of ags){a.x=a.x0;a.y=a.y0}
+    let pool=[]; // 帖子池 {stance,y,infl,created,ups,downs}
+    const log=[];const rational=0.12; // 外生"理性基线"
+    for(let t=0;t<=T;t++){
+      const arousal=Math.exp(-t/4);
+      let nAct=0,cPost=0,cLike=0,cRepost=0,cComment=0,cFollow=0;
+      // 全局热帖（Reddit hot-score）
+      const hot=p=>Math.sign(p.ups-p.downs)*Math.log10(Math.abs(p.ups-p.downs)+1)+0.35*p.created;
+      const trending=pool.slice().sort((x,y)=>hot(y)-hot(x)).slice(0,8);
+      // 作者索引：把 O(边数×池) 扫描降为 O(边数+池)，蒙特卡洛大样本才不卡
+      const byAuth={};for(const p of pool){(byAuth[p.author]||(byAuth[p.author]=[])).push(p)}
+      const newPosts=[];
+      for(const a of ags){
+        const pAct=a.act*(0.35+0.65*arousal)*(1-0.25*v1);
+        if(rnd()>pAct)continue;
+        nAct++;
+        // 步骤2：feed = followees 帖子 + 热帖，按 hot + 嵌入相似度排序取 Top5
+        let feed=[];
+        for(const f of a.followees){const ps=byAuth[f];if(ps)for(const p of ps)feed.push(p)}
+        feed=feed.concat(trending);
+        if(feed.length){
+          feed.sort((x,y)=>(hot(y)+0.8*sim(a,y))-(hot(x)+0.8*sim(a,x)));
+          feed=feed.slice(0,5);
+        }
+        // 步骤3+4：动作决策 & 观点更新（有界信心 + 社会影响）
+        let pull=0,wsum=0;
+        for(const p of feed){
+          const agree=1-Math.abs(a.x-p.stance)/2;
+          if(agree>1-a.eps){p.ups++;cLike++;if(rnd()<0.35){cRepost++}}
+          else if(agree<a.eps){p.downs++;if(rnd()<0.5){cComment++}}
+          else if(rnd()<0.3){cComment++}
+          if(Math.abs(a.x-p.stance)<a.eps){const w=p.infl;pull+=w*(p.stance-a.x);wsum+=w}
+          if(agree>0.8&&p.infl>2.5&&rnd()<0.15){cFollow++}
+        }
+        const mu=0.25*(1+0.5*v3);
+        if(wsum>0)a.x+=mu*pull/wsum;
+        // 发帖（立场≈x，潜在维度≈y）
+        if(rnd()<a.act*(0.2+0.5*Math.abs(a.x))){
+          newPosts.push({author:a.id,stance:clip(a.x+(rnd()-.5)*0.15,-1,1),y:clip(a.y+(rnd()-.5)*0.15,-1,1),infl:a.infl*(1+2*v3*a.kol),created:t,ups:1,downs:0});
+          cPost++;
+        }
+      }
+      // 步骤4 外生"上帝变量"注入 + clip
+      for(const a of ags){
+        a.x+=v1*0.015*(rational-a.x);
+        if(gp[a.g][0]<0)a.x+=v2*0.035*(0.6-a.x);
+        a.x=clip(a.x,-1,1);
+      }
+      // 步骤5：记忆同步 + 帖子老化 + 统计
+      pool=pool.concat(newPosts).filter(p=>t-p.created<3);
+      let pos=0,neu=0,neg=0,ext=0,sum=0;
+      for(const a of ags){sum+=a.x;if(a.x>0.15)pos++;else if(a.x<-0.15)neg++;else neu++;if(Math.abs(a.x)>0.5)ext++}
+      const mean=sum/N;let vv=0;for(const a of ags)vv+=(a.x-mean)*(a.x-mean);vv/=N;
+      log.push({t,active:nAct,posts:cPost,likes:cLike,reposts:cRepost,comments:cComment,follows:cFollow,
+        mean,vari:vv,pos:Math.round(pos/N*100),neu:Math.round(neu/N*100),neg:Math.round(neg/N*100),extreme:Math.round(ext/N*100)});
+    }
+    const last=log[log.length-1];
+    return {mc:false,log,mean:last.mean,vari:last.vari,
+      pos:log.map(r=>r.pos),neu:log.map(r=>r.neu),neg:log.map(r=>r.neg),extreme:log.map(r=>r.extreme)};
+  },
+  // 蒙特卡洛：同一张网络、不同随机流，跑 n 次取均值与 95% 置信区间
+  runMonteCarlo(vars,T,n){
+    const base=this._simSeed(vars);
+    const runs=[];
+    for(let r=0;r<n;r++)runs.push(this.simulate(vars,T,base+r*1013+7919));
+    const steps=T+1;
+    const agg={pos:{mean:[],lo:[],hi:[]},neu:{mean:[],lo:[],hi:[]},neg:{mean:[],lo:[],hi:[]},mo:{mean:[],lo:[],hi:[]},ext:{mean:[]}};
+    const P=runs.map(s=>s.pos),Nn=runs.map(s=>s.neu),Ng=runs.map(s=>s.neg),MO=runs.map(s=>s.log.map(l=>l.mean)),EX=runs.map(s=>s.log.map(l=>l.extreme));
+    for(let t=0;t<steps;t++){
+      agg.pos.mean[t]=meanOf(P.map(p=>p[t]));agg.pos.lo[t]=pct(P.map(p=>p[t]),2.5);agg.pos.hi[t]=pct(P.map(p=>p[t]),97.5);
+      agg.neu.mean[t]=meanOf(Nn.map(p=>p[t]));agg.neu.lo[t]=pct(Nn.map(p=>p[t]),2.5);agg.neu.hi[t]=pct(Nn.map(p=>p[t]),97.5);
+      agg.neg.mean[t]=meanOf(Ng.map(p=>p[t]));agg.neg.lo[t]=pct(Ng.map(p=>p[t]),2.5);agg.neg.hi[t]=pct(Ng.map(p=>p[t]),97.5);
+      agg.mo.mean[t]=meanOf(MO.map(p=>p[t]));agg.mo.lo[t]=pct(MO.map(p=>p[t]),2.5);agg.mo.hi[t]=pct(MO.map(p=>p[t]),97.5);
+      agg.ext.mean[t]=meanOf(EX.map(p=>p[t]));
+    }
+    const fv=runs.map(s=>s.mean),fvn=runs.map(s=>s.neg[steps-1]),fvv=runs.map(s=>s.vari),fe=runs.map(s=>s.extreme[steps-1]);
+    const fmean=meanOf(fv),fsd=sdOf(fv),se=fsd/Math.sqrt(n);
+    return {mc:true,n,agg,sample:runs[0],
+      mean:fmean,vari:meanOf(fvv),
+      pos:agg.pos.mean,neu:agg.neu.mean,neg:agg.neg.mean,extreme:agg.ext.mean,
+      finalMean:{vals:fv,mean:fmean,sd:fsd,se,lo:fmean-1.96*se,hi:fmean+1.96*se},
+      finalNeg:{mean:meanOf(fvn),lo:pct(fvn,2.5),hi:pct(fvn,97.5)},
+      finalExt:{mean:meanOf(fe)}};
+  }
+};
+
+/* ---------- simulation pipeline (视觉流水线 + 真实计算) ---------- */
+const STAGES=[
+ {n:'图谱构建',logs:[['info','解析种子信息，抽取核心实体…'],['ok','实体识别完成：政策/群体/地点/时间'],['info','GraphRAG 构建知识图谱…'],['ok','关系网络建立，注入个体+集体记忆']]},
+ {n:'环境设置',logs:[['info','基于图谱生成智能体人格…'],['agent','人格采样：按群落先验高斯采样立场/信心/活跃/影响力'],['ok','智能体配置注入完成'],['info','偏好依附+同质性建立社交网络']]},
+ {n:'模拟仿真',logs:[['info','启动 OASIS 主循环 env.step()…'],['agent','激活→推荐(hot-score)→动作决策→观点更新'],['warn','事件初期 arousal 高，负面情绪聚集'],['agent','KOL 帖子扩散，有界信心内的立场开始迁移'],['ok','社会演化完成，动态记忆已同步']]},
+ {n:'报告生成',logs:[['info','ReportAgent 检索仿真轨迹…'],['info','按最终立场分布+方差计算路径概率与置信度'],['ok','结构化预测报告生成完毕']]},
+ {n:'深度交互',logs:[['agent','已选取代表性智能体，开放对话通道'],['ok','数字世界就绪，可自由探索 ✨']]}
+];
+function tlog(type,txt){const t=document.getElementById('term');const d=document.createElement('div');d.className='log-line';const now=new Date();const ts=`[${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}]`;d.innerHTML=`<span class="log-t">${ts}</span><span class="log-${type}">${txt}</span>`;t.appendChild(d);t.scrollTop=t.scrollHeight}
+
+function curVars(){return{v1:+document.getElementById('v1').value/100,v2:+document.getElementById('v2').value/100,v3:+document.getElementById('v3').value/100}}
+
+let running=false;
+async function runSim(){
+  if(running)return;running=true;
+  state.scene=document.getElementById('scene').value;
+  state.pop=+document.getElementById('pop').value;
+  state.topo=document.getElementById('topo').value;
+  state.mc=document.getElementById('mcToggle').checked;
+  state.mcN=+document.getElementById('mcN').value;
+  state.done=false;
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('runBtn').textContent='推演进行中…';
+  document.getElementById('toWorld').disabled=true;document.getElementById('toReport').disabled=true;
+  document.getElementById('term').innerHTML='';
+  document.querySelectorAll('#flowLive .flow-step').forEach(s=>s.classList.remove('done','run'));
+  tlog('info','种子信息已注入，开始构建平行数字世界…');
+  const total=STAGES.length;
+  for(let i=0;i<total;i++){
+    const step=document.querySelector(`#flowLive .flow-step[data-s="${i}"]`);
+    step.classList.add('run');
+    document.getElementById('progStage').textContent='阶段 '+(i+1)+'/'+total+' · '+STAGES[i].n;
+    for(const[type,txt]of STAGES[i].logs){await sleep(340+Math.random()*220);tlog(type,txt)}
+    // 在"环境设置"结束后真正建网（含拓扑），在"模拟仿真"结束后真正跑数值引擎
+    if(i===1){const seed=(state.scene.charCodeAt(0)*131+state.pop*7+(state.topo==='sw'?5311:state.topo==='er'?9623:0));ENGINE.build(state.scene,state.pop,seed,state.topo);state.edges=ENGINE.edges.length;tlog('ok',`已生成 ${state.pop} 个智能体、${state.edges} 条社会关系（${TOPOS[state.topo].name}）`)}
+    if(i===2){
+      if(state.mc){
+        state.engine=ENGINE.runMonteCarlo(curVars(),state.T,state.mcN);
+        const fm=state.engine.finalMean;
+        tlog('ok',`蒙特卡洛 ${state.mcN} 次复算收敛：终态均值 x̄=${fm.mean.toFixed(3)} ± ${fm.sd.toFixed(3)}，95%CI=[${fm.lo.toFixed(3)}, ${fm.hi.toFixed(3)}]，负面 ${state.engine.neg[state.T]}%`);
+      }else{
+        state.engine=ENGINE.simulate(curVars(),state.T,ENGINE._simSeed(curVars()));
+        const L=state.engine.log[state.T];
+        tlog('ok',`T+${state.T} 收敛：均值 x̄=${state.engine.mean.toFixed(3)}，极化度=${state.engine.vari.toFixed(3)}`);
+      }
+    }
+    step.classList.remove('run');step.classList.add('done');
+    const pct=Math.round((i+1)/total*100);
+    document.getElementById('progFill').style.width=pct+'%';
+    document.getElementById('progPct').textContent=pct+'%';
+    await sleep(180);
+  }
+  document.getElementById('progStage').textContent='推演完成';
+  buildGraph();
+  state.done=true;state.tick=state.T;
+  document.getElementById('runBtn').disabled=false;
+  document.getElementById('runBtn').textContent='⚡ 重新构建并推演';
+  document.getElementById('toWorld').disabled=false;document.getElementById('toReport').disabled=false;
+  document.getElementById('worldTag').textContent='已生成';
+  document.getElementById('worldTag').style.color='var(--green)';
+  document.getElementById('algoTag').textContent='已运行';
+  document.getElementById('algoTag').style.color='var(--green)';
+  tlog('ok','✅ 全流程结束，可查看数字世界 / 算法引擎 / 预测报告');
+  buildAgents();
+  running=false;bindHover();
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- graph view（从真实 agents 采样着色）---------- */
+function stanceColor(x){return x>0.15?'#10b981':x<-0.15?'#ef4444':'#00d4ff'}
+function buildGraph(){
+  const names=PERSONAS;const k=GROUPS[state.scene].length;
+  const ags=ENGINE.agents;const cap=Math.min(180,ags.length);
+  const stride=Math.max(1,Math.floor(ags.length/cap));
+  const picked=[];const idset=new Set();
+  for(let i=0;i<ags.length;i+=stride){picked.push(ags[i]);idset.add(ags[i].id)}
+  // 保证每个 KOL/高影响力节点入选
+  ags.filter(a=>a.infl>2.5).forEach(a=>{if(!idset.has(a.id)){picked.push(a);idset.add(a.id)}});
+  const nodes=picked.map(a=>({id:'n'+a.id,name:names[a.g],category:a.g,
+    symbolSize:6+Math.min(30,a.infl*4),
+    itemStyle:{color:stanceColor(a.x)},
+    value:a.x.toFixed(2)}));
+  const links=[];
+  picked.forEach(a=>{for(const f of a.followees){if(idset.has(f)){links.push({source:'n'+a.id,target:'n'+f})}}});
+  state.graphData={nodes,links,categories:names.slice(0,k).map(n=>({name:n}))};
+}
+
+/* ---------- charts ---------- */
+function isDark(){return document.body.classList.contains('dark')}
+function axStyle(){const c=isDark()?'rgba(255,255,255,.6)':'rgba(0,0,0,.6)';const l=isDark()?'rgba(255,255,255,.12)':'rgba(0,0,0,.08)';return{axisLabel:{color:c},axisLine:{lineStyle:{color:l}},splitLine:{lineStyle:{color:l}}}}
+function tip(){return{trigger:'axis',backgroundColor:isDark()?'rgba(20,28,48,.92)':'rgba(255,255,255,.96)',borderColor:'rgba(0,212,255,.3)',textStyle:{color:isDark()?'#fff':'#414546'}}}
+let gGraph,gEvo,gMood,gGauge,gProb,gFactor,gAct,gCi;
+
+function moodLabel(p,n){return p>n+20?'趋于正面':n>p+15?'负面主导':'分化胶着'}
+function drawWorld(){
+  document.getElementById('worldEmpty').style.display='none';
+  document.getElementById('worldContent').style.display='block';
+  document.getElementById('wPop').textContent=state.pop.toLocaleString();
+  document.getElementById('wEdge').textContent=state.edges.toLocaleString();
+  const e=state.engine;const p=e.pos[state.T],n=e.neg[state.T];
+  document.getElementById('wMood').textContent=moodLabel(p,n);
+  document.getElementById('wMoodSub').textContent='正面 '+p+'% / 负面 '+n+'%';
+  document.getElementById('wTick').textContent='T+'+state.tick;
+  document.getElementById('wPol').textContent=(state.mc?e.finalExt.mean:e.extreme[state.T])+'%';
+  document.getElementById('wTopo').textContent=TOPOS[state.topo].name.split('（')[0];
+  gGraph=echarts.init(document.getElementById('graph'));
+  gGraph.setOption({
+    tooltip:{formatter:p=>p.dataType==='node'?p.data.name+'（立场 '+p.data.value+'）':''},
+    legend:[{data:state.graphData.categories.map(c=>c.name),textStyle:{color:isDark()?'#fff':'#414546'},top:0,type:'scroll'}],
+    series:[{type:'graph',layout:'force',roam:true,draggable:true,
+      data:state.graphData.nodes,links:state.graphData.links,categories:state.graphData.categories,
+      force:{repulsion:70,edgeLength:[20,90],gravity:.08},
+      lineStyle:{color:isDark()?'rgba(255,255,255,.14)':'rgba(0,0,0,.1)',width:.6,curveness:.1},
+      emphasis:{focus:'adjacency',lineStyle:{width:2}},
+      label:{show:false}}]
+  });
+  drawEvo();drawMoodMini();
+  charts=[gGraph,gEvo,gMood];
+  if(state.mc){document.getElementById('ciWrap').style.display='block';drawCI();charts.push(gCi)}
+  else document.getElementById('ciWrap').style.display='none';
+}
+function drawEvo(){
+  gEvo=echarts.init(document.getElementById('evoChart'));
+  const e=state.engine;
+  gEvo.setOption({
+    tooltip:tip(),legend:{data:['正面','中性','负面'],textStyle:{color:isDark()?'#fff':'#414546'}},
+    grid:{left:40,right:20,top:40,bottom:30},
+    xAxis:{type:'category',data:Array.from({length:state.T+1},(_,i)=>'T+'+i),...axStyle()},
+    yAxis:{type:'value',max:100,...axStyle()},
+    series:[
+      {name:'正面',type:'line',smooth:true,stack:'x',areaStyle:{color:'rgba(16,185,129,.35)'},lineStyle:{color:'#10b981'},itemStyle:{color:'#10b981'},data:e.pos},
+      {name:'中性',type:'line',smooth:true,stack:'x',areaStyle:{color:'rgba(0,212,255,.25)'},lineStyle:{color:'#00d4ff'},itemStyle:{color:'#00d4ff'},data:e.neu},
+      {name:'负面',type:'line',smooth:true,stack:'x',areaStyle:{color:'rgba(239,68,68,.3)'},lineStyle:{color:'#ef4444'},itemStyle:{color:'#ef4444'},data:e.neg}
+    ]
+  });
+}
+function drawMoodMini(){
+  gMood=echarts.init(document.getElementById('moodChart'));
+  const e=state.engine;const last=[e.pos[state.T],e.neu[state.T],e.neg[state.T]];
+  gMood.setOption({
+    tooltip:{trigger:'item',backgroundColor:isDark()?'rgba(20,28,48,.92)':'rgba(255,255,255,.96)',textStyle:{color:isDark()?'#fff':'#414546'}},
+    series:[{type:'pie',radius:['55%','80%'],center:['50%','52%'],label:{color:isDark()?'#fff':'#414546',formatter:'{b}\n{d}%'},
+      data:[{value:last[0],name:'正面',itemStyle:{color:'#10b981'}},{value:last[1],name:'中性',itemStyle:{color:'#00d4ff'}},{value:last[2],name:'负面',itemStyle:{color:'#ef4444'}}]}]
+  });
+}
+// 蒙特卡洛置信区间带：负面% 的均值 ± 95%CI（随仿真推进）
+function drawCI(){
+  gCi=echarts.init(document.getElementById('ciChart'));
+  const a=state.engine.agg.neg;const xs=Array.from({length:state.T+1},(_,i)=>'T+'+i);
+  const band=a.mean.map((_,i)=>[a.lo[i],a.hi[i]]);
+  gCi.setOption({
+    tooltip:tip(),legend:{data:['负面% 均值','95% 置信带'],textStyle:{color:isDark()?'#fff':'#414546'}},
+    grid:{left:42,right:18,top:40,bottom:30},
+    xAxis:{type:'category',data:xs,...axStyle()},
+    yAxis:{type:'value',max:100,...axStyle()},
+    series:[
+      {name:'95% 置信带',type:'line',data:band,lineStyle:{opacity:0},symbol:'none',areaStyle:{color:'rgba(239,68,68,.16)'},tooltip:{show:false}},
+      {name:'负面% 均值',type:'line',smooth:true,data:a.mean,lineStyle:{color:'#ef4444'},itemStyle:{color:'#ef4444'},tooltip:{show:true}}
+    ]
+  });
+}
+let varTimer;
+function onVar(){
+  ['v1','v2','v3'].forEach(id=>document.getElementById(id+'l').textContent=document.getElementById(id).value);
+  clearTimeout(varTimer);
+  varTimer=setTimeout(()=>{
+    // 真正重跑数值引擎（同一张网络，仅改上帝变量）。MC 实时用较小样本保流畅，完整样本点击"重新构建"得到
+    if(state.mc)state.engine=ENGINE.runMonteCarlo(curVars(),state.T,Math.min(state.mcN,24));
+    else state.engine=ENGINE.simulate(curVars(),state.T,ENGINE._simSeed(curVars()));
+    buildGraph();
+    if(document.getElementById('page-world').classList.contains('active'))drawWorld();
+    if(document.getElementById('page-algo').classList.contains('active'))drawAlgo();
+    if(document.getElementById('page-report').classList.contains('active'))drawReport();
+    const e=state.engine;const p=e.pos[state.T],n=e.neg[state.T];
+    document.getElementById('wMood').textContent=moodLabel(p,n);
+    document.getElementById('wMoodSub').textContent='正面 '+p+'% / 负面 '+n+'%';
+  },100);
+}
+
+/* ---------- report ---------- */
+// 路径锚点：[标签, 目标均值, 是否极化型]
+const PATHS={
+  product:[['口碑走高',0.45,0],['平稳',0.1,0],['两极分化',0.0,1],['遇冷',-0.4,0]],
+  social:[['自然爆量',0.45,0],['平稳扩散',0.15,0],['空转无果',-0.1,0],['翻车发酵',-0.45,0]],
+  category:[['机会成立',0.4,0],['局部可切',0.1,0],['需求分散',0.0,1],['伪需求',-0.4,0]]
+};
+function pathProbs(){
+  const e=state.engine;const m=e.mean,vv=e.vari;const arr=PATHS[state.scene];
+  const raw=arr.map(([lb,mu,po])=>{
+    let s=Math.exp(-((m-mu)*(m-mu))/(0.12+vv));
+    if(po)s*=(0.5+vv*3.5); // 极化型路径随方差升高而更可能
+    return s;
+  });
+  const sum=raw.reduce((a,b)=>a+b,0);
+  return arr.map((a,i)=>[a[0],Math.max(2,Math.round(raw[i]/sum*100))]);
+}
+function drawReport(){
+  document.getElementById('reportEmpty').style.display='none';
+  document.getElementById('reportContent').style.display='block';
+  const S=SCENES[state.scene];const e=state.engine;
+  const probs=pathProbs().sort((a,b)=>b[1]-a[1]);
+  const top=probs[0];
+  document.getElementById('repTitle').textContent='最可能路径：'+top[0]+'（'+top[1]+'%）';
+  const mcNote=state.mc?`（蒙特卡洛 N=${e.n} 次复算，终态均值 x̄=${e.finalMean.mean.toFixed(3)} ± ${e.finalMean.sd.toFixed(3)}）`:'';
+  document.getElementById('repSummary').textContent=`基于 ${state.pop.toLocaleString()} 个智能体在数字世界（${TOPOS[state.topo].name.split('（')[0]}）中 ${state.T} 个时间步的实际社会演化，最终立场均值 x̄=${e.mean.toFixed(3)}、极化度(方差)=${e.vari.toFixed(3)}${mcNote}。引擎对你的问题「${document.getElementById('question').value}」推演如上，综合置信度见左侧仪表。`;
+  fillList('findings',S.findings,'');fillList('risks',S.risks,'risk');fillList('actions',S.actions,'warn');
+  // 置信度：极化低 + 互动充分 + （MC）方差小 → 高置信
+  const logSrc=state.mc?e.sample.log:e.log;
+  const inter=logSrc.reduce((a,r)=>a+r.likes+r.reposts+r.comments,0);
+  let conf;
+  if(state.mc){const z=Math.min(1,e.finalMean.sd*5);conf=clip(Math.round(100*(0.55+0.35*(1-z)+0.1*Math.min(1,inter/(state.pop*4)))),55,96)}
+  else conf=clip(Math.round(100*(0.5+0.4*(1-Math.min(1,e.vari*4))+0.1*Math.min(1,inter/(state.pop*4)))),55,96);
+  gGauge=echarts.init(document.getElementById('gauge'));
+  gGauge.setOption({series:[{type:'gauge',startAngle:220,endAngle:-40,min:0,max:100,progress:{show:true,width:12,itemStyle:{color:'#00d4ff'}},axisLine:{lineStyle:{width:12,color:[[1,isDark()?'rgba(255,255,255,.1)':'rgba(0,0,0,.08)']]}},axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},pointer:{show:false},anchor:{show:false},detail:{valueAnimation:true,formatter:'{value}%',color:isDark()?'#fff':'#414546',fontSize:26,offsetCenter:[0,0]},data:[{value:conf,name:'置信度'}],title:{show:false}}]});
+  drawProb(probs);drawFactor();
+  charts=[gGauge,gProb,gFactor];
+}
+function fillList(id,arr,cls){const ul=document.getElementById(id);ul.innerHTML='';arr.forEach(([k,v])=>{const li=document.createElement('li');if(cls)li.className=cls;li.innerHTML=`<span class="k">${k}</span><span>${v}</span>`;ul.appendChild(li)})}
+function drawProb(probs){
+  gProb=echarts.init(document.getElementById('probChart'));
+  gProb.setOption({title:{text:'未来路径概率（由仿真分布导出）',left:'center',textStyle:{color:isDark()?'#fff':'#414546',fontSize:13}},
+    tooltip:{trigger:'item'},series:[{type:'pie',radius:'60%',center:['50%','56%'],
+      label:{color:isDark()?'#fff':'#414546',fontSize:11,formatter:'{b}\n{c}%'},
+      data:probs.map((d,i)=>({name:d[0],value:d[1],itemStyle:{color:PCOLOR[i]}}))}]});
+}
+// 影响因子 = 对每个上帝变量做有限差分敏感度（真实重跑引擎测量）
+function drawFactor(){
+  gFactor=echarts.init(document.getElementById('factorChart'));
+  const base=state.engine.mean;const v=curVars();
+  const sens=(key)=>{const vv={...v};vv[key]=clip(v[key]+0.25,0,1);const r=ENGINE.simulate(vv,state.T);return Math.abs(r.mean-base)/0.25};
+  const s1=sens('v1'),s2=sens('v2'),s3=sens('v3');
+  const mx=Math.max(0.05,s1,s2,s3);
+  const popF=Math.min(1,state.pop/2048);
+  const polF=Math.min(1,state.engine.vari*4);
+  const lab=VARS_LABEL[state.scene]||VARS_LABEL.product;const items=[lab.v1,lab.v2,lab.v3,'群体基数','极化程度'];
+  const vals=[Math.round(s1/mx*100),Math.round(s2/mx*100),Math.round(s3/mx*100),Math.round(popF*100),Math.round(polF*100)];
+  gFactor.setOption({title:{text:'关键影响因子（敏感度分析）',left:'center',textStyle:{color:isDark()?'#fff':'#414546',fontSize:13}},
+    tooltip:{},radar:{indicator:items.map(i=>({name:i,max:100})),radius:'60%',center:['50%','56%'],
+      axisName:{color:isDark()?'rgba(255,255,255,.7)':'rgba(0,0,0,.6)',fontSize:11},
+      splitLine:{lineStyle:{color:isDark()?'rgba(255,255,255,.1)':'rgba(0,0,0,.08)'}},splitArea:{show:false}},
+    series:[{type:'radar',data:[{value:vals,areaStyle:{color:'rgba(0,212,255,.25)'},lineStyle:{color:'#00d4ff'},itemStyle:{color:'#a855f7'}}]}]});
+}
+/* ---------- algo page ---------- */
+function drawAlgo(){
+  document.getElementById('algoEmpty').style.display='none';
+  document.getElementById('algoContent').style.display='block';
+  document.getElementById('algoN').textContent=state.pop.toLocaleString();
+  document.getElementById('algoT').textContent=state.T;
+  const tb=document.getElementById('algoStepBody');tb.innerHTML='';
+  const L=state.mc?state.engine.sample.log:state.engine.log;
+  L.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>T+${r.t}</td><td>${r.active}</td><td>${r.posts}</td><td>${r.likes}</td><td>${r.reposts}</td><td>${r.comments}</td><td>${r.mean.toFixed(3)}</td><td>${r.neg}%</td>`;
+    tb.appendChild(tr);
+  });
+  // 蒙特卡洛稳定性：终态均值意见的分布 + 统计量（仅 MC 模式显示）
+  if(state.mc){
+    document.getElementById('mcWrap').style.display='block';
+    const fm=state.engine.finalMean;
+    document.getElementById('mcStats').innerHTML=
+      `<span><b>样本数</b> N=${state.engine.n}</span>`+
+      `<span><b>终态均值 x̄</b> ${fm.mean.toFixed(3)}</span>`+
+      `<span><b>标准差 SD</b> ${fm.sd.toFixed(3)}</span>`+
+      `<span><b>标准误 SE</b> ${fm.se.toFixed(3)}</span>`+
+      `<span><b>95% CI</b> [${fm.lo.toFixed(3)}, ${fm.hi.toFixed(3)}]</span>`;
+    gAct=echarts.init(document.getElementById('actChart'));
+    drawMC();
+  }else{
+    document.getElementById('mcWrap').style.display='none';
+    gAct=echarts.init(document.getElementById('actChart'));
+  }
+  const xs=L.map(r=>'T+'+r.t);
+  const mk=(name,key,color)=>({name,type:'line',stack:'a',smooth:true,areaStyle:{opacity:.5},lineStyle:{width:1},itemStyle:{color},data:L.map(r=>r[key])});
+  gAct.setOption({tooltip:tip(),legend:{data:['发帖','点赞','转发','评论'],textStyle:{color:isDark()?'#fff':'#414546'},top:0},
+    grid:{left:44,right:16,top:34,bottom:28},
+    xAxis:{type:'category',data:xs,...axStyle()},yAxis:{type:'value',...axStyle()},
+    series:[mk('发帖','posts','#a855f7'),mk('点赞','likes','#10b981'),mk('转发','reposts','#00d4ff'),mk('评论','comments','#fbbf24')]});
+  charts=[gAct];
+}
+// 终态均值意见直方图（蒙特卡洛）
+function drawMC(){
+  const g=echarts.init(document.getElementById('mcHist'));
+  const vals=state.engine.finalMean.vals;const lo=Math.min(...vals),hi=Math.max(...vals);
+  const bins=12,w=(hi-lo||0.1)/bins;const cnt=new Array(bins).fill(0);
+  vals.forEach(v=>{let b=Math.floor((v-lo)/w);if(b>=bins)b=bins-1;cnt[b]++});
+  const xs=cnt.map((_,i)=>(lo+i*w).toFixed(2));
+  g.setOption({
+    tooltip:tip(),grid:{left:46,right:16,top:24,bottom:30},
+    xAxis:{type:'category',data:xs,name:'终态均值 x̄',nameLocation:'middle',nameGap:24,...axStyle()},
+    yAxis:{type:'value',name:'出现次数',...axStyle()},
+    series:[{type:'bar',data:cnt,itemStyle:{color:'#00d4ff',borderRadius:[3,3,0,0]},barWidth:'78%'}]
+  });
+  charts=[gAct,g];
+}
+function applyCharts(){if(state.done){if(document.getElementById('page-world').classList.contains('active'))drawWorld();if(document.getElementById('page-algo').classList.contains('active'))drawAlgo();if(document.getElementById('page-report').classList.contains('active'))drawReport()}}
+
+/* ---------- agents chat ---------- */
+let curAgent=0;
+const REPLIES={
+  product:['核心功能确实惊艳，我已经推荐给朋友了，就是价格略高。','宣传吹太狠，实物有落差，这点得扣分。','如果复购有优惠我会一直用，体验对得起价格。'],
+  social:['这条内容戳中我了，已经转发，但别搞过度营销那套。','活动力度还行，但规则太绕，劝退一批人。','达人说得对，我关注的点正好被回应到了。'],
+  category:['这个品类我等很久了，一直没找到合适的。','现在的方案将就用，但痛点没解决。','价格我能接受，关键看是不是真比现有的好。']
+};
+function buildAgents(){
+  const box=document.getElementById('agentList');box.innerHTML='';
+  const names=PERSONAS.slice(0,4);
+  names.forEach((n,i)=>{const el=document.createElement('div');el.className='agent-pill'+(i===0?' active':'');el.innerHTML=`<span class="agent-av">${n[0]}</span>${n}`;el.onclick=()=>{curAgent=i;document.querySelectorAll('.agent-pill').forEach((x,j)=>x.classList.toggle('active',j===i));greet()};box.appendChild(el)});
+  curAgent=0;document.getElementById('chatBox').innerHTML='';greet();bindHover();
+}
+function greet(){const n=PERSONAS[curAgent];addMsg('bot',n,'我是仿真世界里的「'+n+'」。关于这次推演的事，你想问我点什么？')}
+function addMsg(role,who,txt){const b=document.getElementById('chatBox');const d=document.createElement('div');d.className='msg '+role;d.innerHTML=(role==='bot'?`<div class="who">${who}</div>`:'')+txt;b.appendChild(d);b.scrollTop=b.scrollHeight}
+function sendChat(){const inp=document.getElementById('chatInput');const t=inp.value.trim();if(!t)return;addMsg('user','',t);inp.value='';const n=PERSONAS[curAgent];setTimeout(()=>{const r=REPLIES[state.scene][Math.floor(Math.random()*REPLIES[state.scene].length)];addMsg('bot',n,r)},600)}
+
+bindHover();
+window.addEventListener('resize',()=>charts.forEach(c=>c&&c.resize&&c.resize()));
+</script>
+</body>
+</html>
