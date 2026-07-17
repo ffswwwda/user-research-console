@@ -263,7 +263,7 @@ body.light .mini-note{color:var(--ts-l)}
 .tech b{color:var(--cyan)}
 
 .empty{text-align:center;padding:60px 20px;color:var(--tm)}
-.empty .big{font-size:52px;margin-bottom:16px;opacity:.5}
+.empty .big{font-size:52px;margin-bottom:16px;opacity:.5}.empty .big svg{width:54px;height:54px;opacity:.5}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.3)}
 
 @media(max-width:1024px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.flow{grid-template-columns:1fr 1fr}.nav-main{display:none}}
@@ -301,16 +301,82 @@ body.dark .slider-sw{background:rgba(255,255,255,.16)}
 .mc-stats{display:flex;flex-wrap:wrap;gap:10px 26px;margin:8px 0 14px;padding:14px 16px;border-radius:12px;background:var(--glass2,rgba(0,0,0,.04));border:1px solid var(--line,rgba(0,0,0,.08));font-size:13px;color:var(--muted,#6b7075)}
 body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}
 .mc-stats b{color:var(--cyan);font-weight:600;margin-right:6px}
+
+/* ---------- SVG icon system (gradient, on-brand) ---------- */
+.ic-svg{display:inline-block;vertical-align:middle;flex-shrink:0;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.brand-logo svg{width:22px;height:22px;color:#fff}
+.side-item .ic{width:18px;height:18px}
+.stat-label .ic-svg{width:16px;height:16px}
+.flow-ic svg{width:28px;height:28px;color:var(--ts)}
+.flow-step.done .flow-ic svg,.flow-step.run .flow-ic svg{color:#fff}
+.ds-ic svg{width:20px;height:20px}
+.theme-toggle svg{width:17px;height:17px;margin-right:4px}
+.switch-engine svg{width:14px;height:14px;margin-right:3px}
+.report-h{width:19px;height:19px;margin-right:8px;vertical-align:-4px}
+.arch-ic svg{width:26px;height:26px;color:#fff}
+.run-zap{width:16px;height:16px;margin-right:6px;vertical-align:-3px}
 </style>
 </head>
 <body class="dark">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="uiGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00d4ff"/>
+      <stop offset=".5" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#ff6b9d"/>
+    </linearGradient>
+  </defs>
+  <!-- gradient (on-brand) icons : stroke=url(#uiGrad) -->
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><line x1="4" y1="8" x2="20" y2="8"/><circle cx="9" cy="8" r="2.4"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="15" cy="16" r="2.4"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M12 3 3 8l9 5 9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="12" cy="12" r="9"/><polygon points="15.5 8.5 11 11 8.5 15.5 13 13"/></symbol>
+  <symbol id="i-build" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01M9 21v-3h6v3"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="2.5"/><path d="M12 8V4M9 4h6"/><circle cx="9.5" cy="14" r="1.2" fill="url(#uiGrad)"/><circle cx="14.5" cy="14" r="1.2" fill="url(#uiGrad)"/><path d="M9 18h6"/></symbol>
+  <symbol id="i-steps" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M3 20h4v-5H3zM9 20h4V9H9zM15 20h4V4h-4z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><polygon points="13 2 4 14 11 14 11 22 20 10 13 10 13 2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M15.5 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17 19c0-2.3-1.2-4.2-3-5"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M9 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M15 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></symbol>
+  <symbol id="i-smile" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.5 2 3.5 2s2.5-.8 3.5-2"/><path d="M9 9.5h.01M15 9.5h.01"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M12 3c.5 3 3.5 4.5 3.5 8a3.5 3.5 0 0 1-7 0c0-1 .4-1.8 1-2.5C8.5 11 8 12.5 8 14a4 4 0 1 0 8 0c0-3.5-4-6-4-11z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 13.2 15.7 17.8M15.7 6.2 8.3 10.8"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M20.6 13.4 12 22l-9-9V3h10z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M4 20h16"/><rect x="6" y="11" width="3" height="9" rx="1"/><rect x="11" y="6" width="3" height="14" rx="1"/><rect x="16" y="14" width="3" height="6" rx="1"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M9 2v6M15 2v6"/><path d="M7 8h10v3a5 5 0 0 1-10 0z"/><path d="M12 16v6"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="url(#uiGrad)"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.4L3 21l2.2-5.2A8.5 8.5 0 1 1 21 11.5z"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><polygon points="12 3 14.5 9 21 9.4 16 13.6 17.8 20 12 16.4 6.2 20 8 13.6 3 9.4 9.5 9"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><polyline points="17 3 21 7 17 11"/><path d="M21 7H7"/><polyline points="7 21 3 17 7 13"/><path d="M3 17h14"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="url(#uiGrad)" stroke-width="2"><path d="M12 3 2 20h20z"/><path d="M12 9v5M12 17h.01"/></symbol>
+  <!-- white (currentColor) icons : for gradient-box contexts (brand/flow/arch) -->
+  <symbol id="w-fish" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M2 12c2.5-4 8-6 13-6 1.8 0 3.5.6 5 1.6L22 8v8l-2-1.6c-1.5 1-3.2 1.6-5 1.6-5 0-10.5-2-13-6z"/><circle cx="14" cy="11" r="1" fill="#1a1030"/></symbol>
+  <symbol id="w-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 3 8l9 5 9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="w-chip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+  <symbol id="w-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 4 2"/><path d="M2 14c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 4 2"/></symbol>
+  <symbol id="w-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></symbol>
+  <symbol id="w-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="w-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol>
+  <symbol id="w-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6"/><path d="M7 8h10v3a5 5 0 0 1-10 0z"/><path d="M12 16v6"/></symbol>
+  <symbol id="w-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><rect x="6" y="11" width="3" height="9" rx="1"/><rect x="11" y="6" width="3" height="14" rx="1"/><rect x="16" y="14" width="3" height="6" rx="1"/></symbol>
+  <symbol id="w-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polygon points="15.5 8.5 11 11 8.5 15.5 13 13" fill="currentColor"/></symbol>
+  <symbol id="w-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 4 21 9 16 9"/></symbol>
+</svg>
 <div class="cur" id="cur"></div>
 <div class="cur-glow" id="curGlow"></div>
 
 <nav class="navbar">
   <div class="nav-left">
     <div class="brand">
-      <div class="brand-logo">🐟</div>
+      <div class="brand-logo"><svg class="ic-svg"><use href="#w-fish"/></svg></div>
       <div>用户研究预测引擎</div>
     </div>
     <div class="nav-main">
@@ -326,24 +392,24 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
   </div>
   <div class="nav-right">
     <div class="nav-status"><span class="dot"></span>引擎在线</div>
-    <a class="switch-engine" href="https://ffswwwda.github.io/mirofish-console/" title="切换到 MiroFish 原版">🔀 MiroFish 原版</a>
-    <div class="theme-toggle" id="themeBtn">🌙</div>
+    <a class="switch-engine" href="https://ffswwwda.github.io/mirofish-console/" title="切换到 MiroFish 原版"><svg class="ic-svg"><use href="#i-swap"/></svg> MiroFish 原版</a>
+    <div class="theme-toggle" id="themeBtn"><svg class="ic-svg"><use href="#i-moon"/></svg></div>
   </div>
 </nav>
 
 <aside class="sidebar">
   <div class="side-title">开始</div>
-  <div class="side-item active" data-page="overview"><span class="ic">📊</span>引擎概览</div>
-  <div class="side-item" data-page="console"><span class="ic">🎛️</span>预测工作台</div>
+  <div class="side-item active" data-page="overview"><svg class="ic-svg ic"><use href="#i-grid"/></svg>引擎概览</div>
+  <div class="side-item" data-page="console"><svg class="ic-svg ic"><use href="#i-sliders"/></svg>预测工作台</div>
   <div class="side-title">仿真</div>
-  <div class="side-item" data-page="world"><span class="ic">🌐</span>数字世界</div>
-  <div class="side-item" data-page="algo"><span class="ic">⚙️</span>算法引擎</div>
-  <div class="side-item" data-page="report"><span class="ic">📄</span>预测报告</div>
+  <div class="side-item" data-page="world"><svg class="ic-svg ic"><use href="#i-globe"/></svg>数字世界</div>
+  <div class="side-item" data-page="algo"><svg class="ic-svg ic"><use href="#i-gear"/></svg>算法引擎</div>
+  <div class="side-item" data-page="report"><svg class="ic-svg ic"><use href="#i-doc"/></svg>预测报告</div>
   <div class="side-title">了解</div>
-  <div class="side-item" data-page="base"><span class="ic">🧬</span>用户基座</div>
-  <div class="side-item" data-page="method"><span class="ic">🧭</span>预测方法</div>
-  <div class="side-item" data-page="arch"><span class="ic">🏗️</span>架构说明</div>
-  <div class="side-item" data-page="arch"><span class="ic">⚙️</span>技术栈</div>
+  <div class="side-item" data-page="base"><svg class="ic-svg ic"><use href="#i-layers"/></svg>用户基座</div>
+  <div class="side-item" data-page="method"><svg class="ic-svg ic"><use href="#i-compass"/></svg>预测方法</div>
+  <div class="side-item" data-page="arch"><svg class="ic-svg ic"><use href="#i-build"/></svg>架构说明</div>
+  <div class="side-item" data-page="arch"><svg class="ic-svg ic"><use href="#i-gear"/></svg>技术栈</div>
 </aside>
 
 <main class="main">
@@ -356,21 +422,21 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
     </div>
 
     <div class="card-grid">
-      <div class="glass stat" style="cursor:pointer" onclick="openExplain('agents')"><div class="stat-label">🤖 默认智能体</div><div class="stat-val counter" data-target="512">0</div><div class="stat-sub">可调 128–2048 · 浏览器内 · 点击看说明</div></div>
-      <div class="glass stat" style="cursor:pointer" onclick="openExplain('timesteps')"><div class="stat-label">🧮 时间步</div><div class="stat-val counter" data-target="12">0</div><div class="stat-sub">T+0 → T+12 社会演化 · 点击看说明</div></div>
-      <div class="glass stat" style="cursor:pointer" onclick="openExplain('topo')"><div class="stat-label">🌐 网络拓扑</div><div class="stat-val counter" data-target="3">0</div><div class="stat-sub">无标度 / 小世界 / 随机 · 点击看说明</div></div>
-      <div class="glass stat" style="cursor:pointer" onclick="openExplain('speed')"><div class="stat-label">⚡ 单次仿真</div><div class="stat-val">&lt;1<span style="font-size:18px">s</span></div><div class="stat-sub">浏览器内实时 · 零后端 · 点击看说明</div></div>
+      <div class="glass stat" style="cursor:pointer" onclick="openExplain('agents')"><div class="stat-label"><svg class="ic-svg"><use href="#i-bot"/></svg>默认智能体</div><div class="stat-val counter" data-target="512">0</div><div class="stat-sub">可调 128–2048 · 浏览器内 · 点击看说明</div></div>
+      <div class="glass stat" style="cursor:pointer" onclick="openExplain('timesteps')"><div class="stat-label"><svg class="ic-svg"><use href="#i-steps"/></svg>时间步</div><div class="stat-val counter" data-target="12">0</div><div class="stat-sub">T+0 → T+12 社会演化 · 点击看说明</div></div>
+      <div class="glass stat" style="cursor:pointer" onclick="openExplain('topo')"><div class="stat-label"><svg class="ic-svg"><use href="#i-globe"/></svg>网络拓扑</div><div class="stat-val counter" data-target="3">0</div><div class="stat-sub">无标度 / 小世界 / 随机 · 点击看说明</div></div>
+      <div class="glass stat" style="cursor:pointer" onclick="openExplain('speed')"><div class="stat-label"><svg class="ic-svg"><use href="#i-zap"/></svg>单次仿真</div><div class="stat-val">&lt;1<span style="font-size:18px">s</span></div><div class="stat-sub">浏览器内实时 · 零后端 · 点击看说明</div></div>
     </div>
 
     <div class="glass sec">
       <div class="sec-title"><span class="bar"></span>五步工作流</div>
       <div class="sec-desc">上传种子材料，用自然语言描述你的预测需求。引擎自动跑完从图谱构建到报告生成的全流程，最后你还能钻进这个世界，跟任意智能体对话。</div>
       <div class="flow">
-        <div class="flow-step"><span class="num">01</span><div class="flow-ic">🧬</div><h4>图谱构建</h4><p>种子提取 + 记忆注入，GraphRAG 建关系网</p><span class="flow-arrow">→</span></div>
-        <div class="flow-step"><span class="num">02</span><div class="flow-ic">🎭</div><h4>环境设置</h4><p>实体关系抽取，人格生成，Agent 配置</p><span class="flow-arrow">→</span></div>
-        <div class="flow-step"><span class="num">03</span><div class="flow-ic">🌊</div><h4>模拟仿真</h4><p>双平台并行演化，动态时间记忆更新</p><span class="flow-arrow">→</span></div>
-        <div class="flow-step"><span class="num">04</span><div class="flow-ic">📄</div><h4>报告生成</h4><p>ReportAgent 深度交互产出预测报告</p><span class="flow-arrow">→</span></div>
-        <div class="flow-step"><span class="num">05</span><div class="flow-ic">💬</div><h4>深度交互</h4><p>与世界中任意 Agent 自由对话</p></div>
+        <div class="flow-step"><span class="num">01</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-layers"/></svg></div><h4>图谱构建</h4><p>种子提取 + 记忆注入，GraphRAG 建关系网</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step"><span class="num">02</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-chip"/></svg></div><h4>环境设置</h4><p>实体关系抽取，人格生成，Agent 配置</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step"><span class="num">03</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-wave"/></svg></div><h4>模拟仿真</h4><p>双平台并行演化，动态时间记忆更新</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step"><span class="num">04</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-doc"/></svg></div><h4>报告生成</h4><p>ReportAgent 深度交互产出预测报告</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step"><span class="num">05</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-chat"/></svg></div><h4>深度交互</h4><p>与世界中任意 Agent 自由对话</p></div>
       </div>
       <div style="margin-top:24px;text-align:center">
         <button class="btn btn-primary" onclick="go('console')">进入预测工作台 →</button>
@@ -398,11 +464,11 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 
     <div class="glass sec">
       <div class="flow" id="flowLive">
-        <div class="flow-step" data-s="0"><span class="num">01</span><div class="flow-ic">🧬</div><h4>图谱构建</h4><p>GraphRAG</p><span class="flow-arrow">→</span></div>
-        <div class="flow-step" data-s="1"><span class="num">02</span><div class="flow-ic">🎭</div><h4>环境设置</h4><p>人格生成</p><span class="flow-arrow">→</span></div>
-        <div class="flow-step" data-s="2"><span class="num">03</span><div class="flow-ic">🌊</div><h4>模拟仿真</h4><p>社会演化</p><span class="flow-arrow">→</span></div>
-        <div class="flow-step" data-s="3"><span class="num">04</span><div class="flow-ic">📄</div><h4>报告生成</h4><p>ReportAgent</p><span class="flow-arrow">→</span></div>
-        <div class="flow-step" data-s="4"><span class="num">05</span><div class="flow-ic">💬</div><h4>深度交互</h4><p>Agent 对话</p></div>
+        <div class="flow-step" data-s="0"><span class="num">01</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-layers"/></svg></div><h4>图谱构建</h4><p>GraphRAG</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step" data-s="1"><span class="num">02</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-chip"/></svg></div><h4>环境设置</h4><p>人格生成</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step" data-s="2"><span class="num">03</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-wave"/></svg></div><h4>模拟仿真</h4><p>社会演化</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step" data-s="3"><span class="num">04</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-doc"/></svg></div><h4>报告生成</h4><p>ReportAgent</p><span class="flow-arrow">→</span></div>
+        <div class="flow-step" data-s="4"><span class="num">05</span><div class="flow-ic"><svg class="ic-svg"><use href="#w-chat"/></svg></div><h4>深度交互</h4><p>Agent 对话</p></div>
       </div>
     </div>
 
@@ -470,7 +536,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
             <label class="switch"><input type="checkbox" id="briefActivity"><span class="slider-sw"></span></label>
           </div>
         </div>
-        <button class="btn btn-primary" id="runBtn" style="width:100%" onclick="runSim()">⚡ 构建数字世界并推演</button>
+        <button class="btn btn-primary" id="runBtn" style="width:100%" onclick="runSim()"><svg class="ic-svg run-zap"><use href="#i-zap"/></svg>构建数字世界并推演</button>
       </div>
 
       <div class="glass sec">
@@ -499,17 +565,17 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
     </div>
 
     <div id="worldEmpty" class="glass sec">
-      <div class="empty"><div class="big">🌐</div>还没有数字世界。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>构建一个。</div>
+      <div class="empty"><div class="big"><svg class="ic-svg"><use href="#i-globe"/></svg></div>还没有数字世界。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>构建一个。</div>
     </div>
 
     <div id="worldContent" style="display:none">
       <div class="card-grid">
-        <div class="glass stat"><div class="stat-label">🧑‍🤝‍🧑 智能体总数</div><div class="stat-val" id="wPop">0</div><div class="stat-sub">分属若干人格群落</div></div>
-        <div class="glass stat"><div class="stat-label">🔗 社会关系</div><div class="stat-val" id="wEdge">0</div><div class="stat-sub">GraphRAG 构建</div></div>
-        <div class="glass stat"><div class="stat-label">😊 群体情绪</div><div class="stat-val" id="wMood">中性</div><div class="stat-sub" id="wMoodSub">实时演化中</div></div>
-        <div class="glass stat"><div class="stat-label">🔥 群体极化</div><div class="stat-val" id="wPol">0%</div><div class="stat-sub">立场|x|&gt;0.5 占比</div></div>
-        <div class="glass stat"><div class="stat-label">⏱️ 仿真时刻</div><div class="stat-val" id="wTick">T+0</div><div class="stat-sub">动态时间记忆</div></div>
-        <div class="glass stat"><div class="stat-label">🕸️ 网络拓扑</div><div class="stat-val" id="wTopo" style="font-size:15px">—</div><div class="stat-sub">信息扩散结构</div></div>
+        <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-users"/></svg>智能体总数</div><div class="stat-val" id="wPop">0</div><div class="stat-sub">分属若干人格群落</div></div>
+        <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-link"/></svg>社会关系</div><div class="stat-val" id="wEdge">0</div><div class="stat-sub">GraphRAG 构建</div></div>
+        <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-smile"/></svg>群体情绪</div><div class="stat-val" id="wMood">中性</div><div class="stat-sub" id="wMoodSub">实时演化中</div></div>
+        <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-flame"/></svg>群体极化</div><div class="stat-val" id="wPol">0%</div><div class="stat-sub">立场|x|&gt;0.5 占比</div></div>
+        <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-clock"/></svg>仿真时刻</div><div class="stat-val" id="wTick">T+0</div><div class="stat-sub">动态时间记忆</div></div>
+        <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-share"/></svg>网络拓扑</div><div class="stat-val" id="wTopo" style="font-size:15px">—</div><div class="stat-sub">信息扩散结构</div></div>
       </div>
 
       <div class="two-col">
@@ -558,7 +624,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
     </div>
 
     <div id="reportEmpty" class="glass sec">
-      <div class="empty"><div class="big">📄</div>还没有预测报告。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>运行一次推演。</div>
+      <div class="empty"><div class="big"><svg class="ic-svg"><use href="#i-doc"/></svg></div>还没有预测报告。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>运行一次推演。</div>
     </div>
 
     <div id="reportContent" style="display:none">
@@ -595,11 +661,11 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
           <ul class="rep-list" id="findings"></ul>
         </div>
         <div class="rep-section">
-          <h4>⚠️ 风险与争议点</h4>
+          <h4><svg class="ic-svg report-h"><use href="#i-alert"/></svg>风险与争议点</h4>
           <ul class="rep-list" id="risks"></ul>
         </div>
         <div class="rep-section">
-          <h4>🎯 建议动作</h4>
+          <h4><svg class="ic-svg report-h"><use href="#i-target"/></svg>建议动作</h4>
           <ul class="rep-list" id="actions"></ul>
         </div>
       </div>
@@ -626,7 +692,7 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
     </div>
 
     <div id="algoEmpty" class="glass sec">
-      <div class="empty"><div class="big">⚙️</div>数值引擎尚未运行。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>构建并推演一次。</div>
+      <div class="empty"><div class="big"><svg class="ic-svg"><use href="#i-gear"/></svg></div>数值引擎尚未运行。<br>请先到<b style="color:var(--cyan);cursor:none" onclick="go('console')"> 预测工作台 </b>构建并推演一次。</div>
     </div>
 
     <div id="algoContent" style="display:none">
@@ -715,10 +781,10 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
       <p class="page-sub">这是仿真的人格来源。每个智能体不是一个虚构角色，而是从你的用户研究体系中聚类出来的真实用户分群——态度、活跃度、忠诚度、价格—品质取向，全部来自 VOC 语料与标签体系。引擎直接读取这张表。</p>
     </div>
     <div class="card-grid">
-      <div class="glass stat"><div class="stat-label">🧬 用户分群</div><div class="stat-val" id="baseSeg">8</div><div class="stat-sub">来自 VOC 聚类 / 用户画像</div></div>
-      <div class="glass stat"><div class="stat-label">🏷️ 标签维度</div><div class="stat-val">9+</div><div class="stat-sub">画像/动机/阻碍/需求…</div></div>
-      <div class="glass stat"><div class="stat-label">📊 态度空间</div><div class="stat-val">x·y</div><div class="stat-sub">态度 × 价格—品质取向</div></div>
-      <div class="glass stat"><div class="stat-label">🔌 数据接入</div><div class="stat-val">JSON</div><div class="stat-sub">VOC / 类目洞察导出</div></div>
+      <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-layers"/></svg>用户分群</div><div class="stat-val" id="baseSeg">8</div><div class="stat-sub">来自 VOC 聚类 / 用户画像</div></div>
+      <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-tag"/></svg>标签维度</div><div class="stat-val">9+</div><div class="stat-sub">画像/动机/阻碍/需求…</div></div>
+      <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-bar"/></svg>态度空间</div><div class="stat-val">x·y</div><div class="stat-sub">态度 × 价格—品质取向</div></div>
+      <div class="glass stat"><div class="stat-label"><svg class="ic-svg"><use href="#i-plug"/></svg>数据接入</div><div class="stat-val">JSON</div><div class="stat-sub">VOC / 类目洞察导出</div></div>
     </div>
     <div class="glass sec">
       <div class="sec-title"><span class="bar"></span>用户分群先验（仿真人格来源）</div>
@@ -928,13 +994,13 @@ followees_i ← 依附概率 P(j) ∝ degree_j + 同质性(|x_i-x_j|越小越易
     </div>
 
     <div class="arch-grid">
-      <div class="glass arch-card"><div class="arch-ic">🧬</div><h4>用户基座 · 人格来源</h4><p>8 个预设分群（尝鲜型/价格敏感者/品质党/观望群体/痛点击中者/KOL/差评传播者/竞品用户）组成仿真的人格先验。每个分群有 {x立场均值, y价格-品质取向, 活跃度, 是否KOL, 占比权重}。支持通过 VOC 聚类导出 <code>{segments:[...]}</code> JSON 一键导入覆盖。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">📱</div><h4>社媒数据基座 SOCIAL_BASE</h4><p>从 content-analytics-dashboard 提取的社媒基准：内容形式(清单/直播切片/图文/视频)的爆款率、情绪(搞笑/实用/震惊/高级/共鸣)的爆款率、主题(平替/成分科普/赠礼/抽奖)表现、账号类型放大系数、活动节点抬升系数、最佳发帖时段。支持 <code>content_data.json</code> 全量导入自动重算。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">🌊</div><h4>确定性多智能体引擎 ENGINE</h4><p>纯前端 mulberry32 种子化随机数，同参数完全可复算。512 智能体（128-2048 可调）在无标度/小世界/随机三种网络拓扑上跑 12 时间步的完整社会演化：激活（arousal=e⁻ᵗ/⁴）→ Reddit hot-score 推荐 → 动作决策（like/repost/dislike/comment/create）→ 有界信心 + DeGroot 观点更新 → 上帝变量注入 → 统计。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">📊</div><h4>三场景差异化输出 computeMetrics</h4><p>按场景提取专属指标与运营化结论：<b>新品上市</b>（采纳率/分群转化/销量区间/价格敏感者风险）、<b>社媒活动</b>（预测爆款率/曝光区间/触达率/转发系数K/翻车风险）、<b>品类机会</b>（NPS/差评风险指数/评分预测/痛点触发）。每个场景的 KPI 卡 + 专属图 + 填数结论模板不同。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">🔌</div><h4>数据源系统 · 多源路由</h4><p>4 个注册数据源（内容灵感台 / VOC 标签报告 / 品类洞察 / 产品运营看板）按场景推荐，一键直连 raw.githubusercontent.com 自动校准：social handler → parseSocialData 重算 SOCIAL_BASE；voc handler → applyImport 升级人格；category/sales handler 校准品类与销量基线。准确率档位 L0→L3 实时指示。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">🧭</div><h4>三种预测路径合一</h4><p>①<b>回顾式</b>（关键词匹配 + 历史相似样本）可由 content-analytics-dashboard 实现；②<b>预测式</b>（本工具的多智能体仿真 + 公式模型）是当前主体的预测方式；③<b>接大模型</b>（LLM 做精细分群/语义聚类/情感建模）是准备好接口、等待 API 接入的升级路径。三条路径相互补充而非替代。</p></div>
-      <div class="glass arch-card"><div class="arch-ic">🔄</div><h4>蒙特卡洛 · 统计显著性</h4><p>打开开关后用不同随机流重复仿真 N 次（20-100），输出终态均值 ± 95% 置信区间、终态分布直方图、以及由方差导出的置信度得分。影响因子雷达图对每个上帝变量做有限差分敏感度分析（真实重跑引擎测量变量影响力）。确定性 + 随机性结合。</p></div>
+      <div class="glass arch-card"><div class="arch-ic"><svg class="ic-svg"><use href="#w-layers"/></svg></div><h4>用户基座 · 人格来源</h4><p>8 个预设分群（尝鲜型/价格敏感者/品质党/观望群体/痛点击中者/KOL/差评传播者/竞品用户）组成仿真的人格先验。每个分群有 {x立场均值, y价格-品质取向, 活跃度, 是否KOL, 占比权重}。支持通过 VOC 聚类导出 <code>{segments:[...]}</code> JSON 一键导入覆盖。</p></div>
+      <div class="glass arch-card"><div class="arch-ic"><svg class="ic-svg"><use href="#w-phone"/></svg></div><h4>社媒数据基座 SOCIAL_BASE</h4><p>从 content-analytics-dashboard 提取的社媒基准：内容形式(清单/直播切片/图文/视频)的爆款率、情绪(搞笑/实用/震惊/高级/共鸣)的爆款率、主题(平替/成分科普/赠礼/抽奖)表现、账号类型放大系数、活动节点抬升系数、最佳发帖时段。支持 <code>content_data.json</code> 全量导入自动重算。</p></div>
+      <div class="glass arch-card"><div class="arch-ic"><svg class="ic-svg"><use href="#w-wave"/></svg></div><h4>确定性多智能体引擎 ENGINE</h4><p>纯前端 mulberry32 种子化随机数，同参数完全可复算。512 智能体（128-2048 可调）在无标度/小世界/随机三种网络拓扑上跑 12 时间步的完整社会演化：激活（arousal=e⁻ᵗ/⁴）→ Reddit hot-score 推荐 → 动作决策（like/repost/dislike/comment/create）→ 有界信心 + DeGroot 观点更新 → 上帝变量注入 → 统计。</p></div>
+      <div class="glass arch-card"><div class="arch-ic"><svg class="ic-svg"><use href="#w-bar"/></svg></div><h4>三场景差异化输出 computeMetrics</h4><p>按场景提取专属指标与运营化结论：<b>新品上市</b>（采纳率/分群转化/销量区间/价格敏感者风险）、<b>社媒活动</b>（预测爆款率/曝光区间/触达率/转发系数K/翻车风险）、<b>品类机会</b>（NPS/差评风险指数/评分预测/痛点触发）。每个场景的 KPI 卡 + 专属图 + 填数结论模板不同。</p></div>
+      <div class="glass arch-card"><div class="arch-ic"><svg class="ic-svg"><use href="#w-plug"/></svg></div><h4>数据源系统 · 多源路由</h4><p>4 个注册数据源（内容灵感台 / VOC 标签报告 / 品类洞察 / 产品运营看板）按场景推荐，一键直连 raw.githubusercontent.com 自动校准：social handler → parseSocialData 重算 SOCIAL_BASE；voc handler → applyImport 升级人格；category/sales handler 校准品类与销量基线。准确率档位 L0→L3 实时指示。</p></div>
+      <div class="glass arch-card"><div class="arch-ic"><svg class="ic-svg"><use href="#w-compass"/></svg></div><h4>三种预测路径合一</h4><p>①<b>回顾式</b>（关键词匹配 + 历史相似样本）可由 content-analytics-dashboard 实现；②<b>预测式</b>（本工具的多智能体仿真 + 公式模型）是当前主体的预测方式；③<b>接大模型</b>（LLM 做精细分群/语义聚类/情感建模）是准备好接口、等待 API 接入的升级路径。三条路径相互补充而非替代。</p></div>
+      <div class="glass arch-card"><div class="arch-ic"><svg class="ic-svg"><use href="#w-refresh"/></svg></div><h4>蒙特卡洛 · 统计显著性</h4><p>打开开关后用不同随机流重复仿真 N 次（20-100），输出终态均值 ± 95% 置信区间、终态分布直方图、以及由方差导出的置信度得分。影响因子雷达图对每个上帝变量做有限差分敏感度分析（真实重跑引擎测量变量影响力）。确定性 + 随机性结合。</p></div>
     </div>
 
     <div class="glass sec">
@@ -987,7 +1053,7 @@ function bindHover(){document.querySelectorAll('.btn,.nav-item,.side-item,.stat,
 
 /* ---------- theme ---------- */
 let charts=[];
-document.getElementById('themeBtn').onclick=function(){document.body.classList.toggle('dark');document.body.classList.toggle('light');this.textContent=document.body.classList.contains('dark')?'🌙':'☀️';charts.forEach(c=>c&&c.dispose&&applyCharts())};
+document.getElementById('themeBtn').onclick=function(){document.body.classList.toggle('dark');document.body.classList.toggle('light');this.innerHTML=document.body.classList.contains('dark')?'<svg class="ic-svg"><use href="#i-moon"/></svg>':'<svg class="ic-svg"><use href="#i-sun"/></svg>';charts.forEach(c=>c&&c.dispose&&applyCharts())};
 
 /* ---------- nav ---------- */
 function go(p){
@@ -1630,7 +1696,7 @@ async function runSim(){
   buildGraph();
   state.done=true;state.tick=state.T;
   document.getElementById('runBtn').disabled=false;
-  document.getElementById('runBtn').textContent='⚡ 重新构建并推演';
+  document.getElementById('runBtn').innerHTML='<svg class="ic-svg run-zap"><use href="#i-zap"/></svg> 重新构建并推演';
   document.getElementById('toWorld').disabled=false;document.getElementById('toReport').disabled=false;
   document.getElementById('worldTag').textContent='已生成';
   document.getElementById('worldTag').style.color='var(--green)';
@@ -1952,42 +2018,42 @@ bindHover();
 
 /* ---------- 解释弹窗（概览卡片点击）---------- */
 const EXPLAINS={
-  agents:{title:'🤖 默认智能体 512 个',body:'数字世界里的虚拟用户数。每个智能体都有独立立场、活跃度、影响力、价格-品质取向。<br><br><b>规模怎么选</b>：<br>· 128：粗略探索，<1s 出结果<br>· 512：默认，统计稳定<br>· 2048：高保真，仿真更慢<br><br>规模越大群体行为越接近真实，但计算时间线性增加。128-2048 可在控制台调整。'},
-  timesteps:{title:'🧮 时间步 12 步',body:'每个时间步 = 一次完整的社会演化循环：<b>激活 → 推荐(hot-score) → 动作决策 → 观点更新 → 统计</b>。<br><br>12 步覆盖一个典型传播周期（≈2 周）。<br><br>· 步数太少：群体还没演化到稳定态<br>· 步数太多：边际信息递减<br><br>12 步是该引擎的默认甜点位，对社媒/新品/品类三个场景都适用。'},
-  topo:{title:'🌐 网络拓扑 3 种',body:'决定信息如何在群体中流动。不同拓扑模拟不同结构：<br><br>· <b>无标度（PA，偏好依附）</b>：少数枢纽节点高度连接，信息经它们快速扩散——最接近真实社交平台<br>· <b>小世界（SW，高聚类）</b>：强同群聚类，跨群只靠少量桥接——回声室效应最强<br>· <b>随机网络（ER）</b>：连接均匀分布，无结构偏置——作为对照基线<br><br>默认 PA，因为真实社媒最像 PA。'},
-  speed:{title:'⚡ 单次仿真 < 1 秒',body:'浏览器内确定性计算，零后端依赖。用 mulberry32 种子化伪随机数，相同参数结果完全可复算。<br><br>打开<b>蒙特卡洛复算</b>开关可跑 N 次取均值 ± 95% 置信区间，让结论带统计显著性。<br><br>512 智能体 × 12 步 ≈ 30-50ms（取决于浏览器）。'},
-  method:{title:'🧭 三种预测路径',body:'预测不是单一动作，是不同工具的不同实现：<br><br>· <b>回顾式</b>：在历史内容库里找相似样本 → 历史上跑多少<br>· <b>预测式</b>（本工具）：多智能体态度演化 + 公式模型 → 这条内容怎么传播<br>· <b>接大模型</b>：LLM 提取人格/聚类/语义 → 处理规则做不到的精细化<br><br>详见「预测方法」页的对比表。'}
+  agents:{title:'<svg class="ic-svg report-h"><use href="#i-bot"/></svg>默认智能体 512 个',body:'数字世界里的虚拟用户数。每个智能体都有独立立场、活跃度、影响力、价格-品质取向。<br><br><b>规模怎么选</b>：<br>· 128：粗略探索，<1s 出结果<br>· 512：默认，统计稳定<br>· 2048：高保真，仿真更慢<br><br>规模越大群体行为越接近真实，但计算时间线性增加。128-2048 可在控制台调整。'},
+  timesteps:{title:'<svg class="ic-svg report-h"><use href="#i-steps"/></svg>时间步 12 步',body:'每个时间步 = 一次完整的社会演化循环：<b>激活 → 推荐(hot-score) → 动作决策 → 观点更新 → 统计</b>。<br><br>12 步覆盖一个典型传播周期（≈2 周）。<br><br>· 步数太少：群体还没演化到稳定态<br>· 步数太多：边际信息递减<br><br>12 步是该引擎的默认甜点位，对社媒/新品/品类三个场景都适用。'},
+  topo:{title:'<svg class="ic-svg report-h"><use href="#i-globe"/></svg>网络拓扑 3 种',body:'决定信息如何在群体中流动。不同拓扑模拟不同结构：<br><br>· <b>无标度（PA，偏好依附）</b>：少数枢纽节点高度连接，信息经它们快速扩散——最接近真实社交平台<br>· <b>小世界（SW，高聚类）</b>：强同群聚类，跨群只靠少量桥接——回声室效应最强<br>· <b>随机网络（ER）</b>：连接均匀分布，无结构偏置——作为对照基线<br><br>默认 PA，因为真实社媒最像 PA。'},
+  speed:{title:'<svg class="ic-svg report-h"><use href="#i-zap"/></svg>单次仿真 < 1 秒',body:'浏览器内确定性计算，零后端依赖。用 mulberry32 种子化伪随机数，相同参数结果完全可复算。<br><br>打开<b>蒙特卡洛复算</b>开关可跑 N 次取均值 ± 95% 置信区间，让结论带统计显著性。<br><br>512 智能体 × 12 步 ≈ 30-50ms（取决于浏览器）。'},
+  method:{title:'<svg class="ic-svg report-h"><use href="#i-compass"/></svg>三种预测路径',body:'预测不是单一动作，是不同工具的不同实现：<br><br>· <b>回顾式</b>：在历史内容库里找相似样本 → 历史上跑多少<br>· <b>预测式</b>（本工具）：多智能体态度演化 + 公式模型 → 这条内容怎么传播<br>· <b>接大模型</b>：LLM 提取人格/聚类/语义 → 处理规则做不到的精细化<br><br>详见「预测方法」页的对比表。'}
 };
-function openExplain(k){const e=EXPLAINS[k];if(!e)return;document.getElementById('exTitle').textContent=e.title;document.getElementById('exBody').innerHTML=e.body;const m=document.getElementById('explainModal');m.style.display='flex';bindHover()}
+function openExplain(k){const e=EXPLAINS[k];if(!e)return;document.getElementById('exTitle').innerHTML=e.title;document.getElementById('exBody').innerHTML=e.body;const m=document.getElementById('explainModal');m.style.display='flex';bindHover()}
 function closeExplain(){document.getElementById('explainModal').style.display='none'}
 
 /* ---------- 数据源系统（不同目的接不同真实源）---------- */
 const DATA_SOURCES=[
-  {id:'cad',name:'内容灵感台',icon:'📱',desc:'社媒帖+评论+互动+爆款率，36 条记录 + 聚合洞察',
+  {id:'cad',name:'内容灵感台',icon:'<svg class="ic-svg"><use href="#i-phone"/></svg>',desc:'社媒帖+评论+互动+爆款率，36 条记录 + 聚合洞察',
    url:'https://raw.githubusercontent.com/ffswwwda/content-analytics-dashboard/main/data/content_data.json',
    scenes:{product:1,social:3,category:1},handler:'social',accuracy:'高',
    notes:'<b>校准内容</b>：SOCIAL_BASE 形式/情绪/主题/账号/活动/最佳时段/账号矩阵。导入后社媒预测从 L0 跳到 L2。'},
-  {id:'voc',name:'VOC 标签报告',icon:'🏷️',desc:'九大标签模块（用户画像/购买动机/使用场景/阻碍/忠诚度/改进建议/十三种需求）',
+  {id:'voc',name:'VOC 标签报告',icon:'<svg class="ic-svg"><use href="#i-tag"/></svg>',desc:'九大标签模块（用户画像/购买动机/使用场景/阻碍/忠诚度/改进建议/十三种需求）',
    url:'https://raw.githubusercontent.com/ffswwwda/voc-report/main/data/voc_data.json',
    scenes:{product:3,social:2,category:2},handler:'voc',accuracy:'高',
    notes:'<b>校准内容</b>：SEG_PRIOR（8 个分群的 x/y/act/advocate/tags）。导入后人格先验从"内置示例"升级为你的真实聚类。'},
-  {id:'cih',name:'品类洞察',icon:'🎯',desc:'品类细分 + JTBD + 需求四象限 + 价格带',
+  {id:'cih',name:'品类洞察',icon:'<svg class="ic-svg"><use href="#i-box"/></svg>',desc:'品类细分 + JTBD + 需求四象限 + 价格带',
    url:'https://raw.githubusercontent.com/ffswwwda/category-insight-hub/main/data/category_data.json',
    scenes:{product:2,social:1,category:3},handler:'category',accuracy:'高',
    notes:'<b>校准内容</b>：需求缺口分群 + 痛点强度 + 供给可行度。导入后品类场景预测准确率显著提升。'},
-  {id:'pod',name:'产品运营看板',icon:'📊',desc:'SKU 级别销量/订单/渠道/类目数据',
+  {id:'pod',name:'产品运营看板',icon:'<svg class="ic-svg"><use href="#i-trend"/></svg>',desc:'SKU 级别销量/订单/渠道/类目数据',
    url:'https://raw.githubusercontent.com/ffswwwda/product-ops-dashboard/main/data/sales_data.json',
    scenes:{product:3,social:0,category:1},handler:'sales',accuracy:'中',
    notes:'<b>校准内容</b>：新品销量预测的目标人群基数 + 历史采纳率。导入后新品销量估算更准。'},
-  {id:'hub',name:'品类洞察（全量产品）',icon:'🎯',desc:'248 条产品数据 + 类目/价格/评分/竞品分析',
+  {id:'hub',name:'品类洞察（全量产品）',icon:'<svg class="ic-svg"><use href="#i-box"/></svg>',desc:'248 条产品数据 + 类目/价格/评分/竞品分析',
    url:'https://raw.githubusercontent.com/ffswwwda/category-insight-hub/main/de_records.json',
    scenes:{product:2,social:1,category:2,innovation:3},handler:'innovation',accuracy:'高',
    notes:'<b>校准内容</b>：INNOVATION_BASE 竞争缺口/已知解决方案/品类分布。导入后新品创意预测的创意度/可行性显著提升。'},
-  {id:'lead',name:'领先用户反馈专区',icon:'🌟',desc:'领先用户表达的需求/痛点/JTBD，含时间维度（首次表达月份）与强度',
+  {id:'lead',name:'领先用户反馈专区',icon:'<svg class="ic-svg"><use href="#i-star"/></svg>',desc:'领先用户表达的需求/痛点/JTBD，含时间维度（首次表达月份）与强度',
    url:'https://raw.githubusercontent.com/ffswwwda/category-insight-hub/main/lead_user_records.json',
    scenes:{product:1,social:0,category:2,innovation:3},handler:'lead',accuracy:'高',
    notes:'<b>校准内容</b>：INNOVATION_BASE 的需求验证度/前瞻性/需求强度（从领先用户记录时间轴推导）。需要把领先用户数据导出为 lead_user_records.json 上传到此 URL。'},
-  {id:'leadFallback',name:'领先用户反馈（手动粘贴）',icon:'🌟',desc:'没有远程文件时，直接粘贴 JSON 到下方文本框',
+  {id:'leadFallback',name:'领先用户反馈（手动粘贴）',icon:'<svg class="ic-svg"><use href="#i-star"/></svg>',desc:'没有远程文件时，直接粘贴 JSON 到下方文本框',
    url:null,
    scenes:{product:1,social:0,category:2,innovation:3},handler:'lead',accuracy:'中',
    notes:'<b>校准内容</b>：与上面数据源相同，只是用粘贴方式。Schema：{leadUsers:[{need,category,first_seen,frequency,intensity,workaround,tags}]}'}
