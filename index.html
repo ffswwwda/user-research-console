@@ -536,7 +536,20 @@ body.dark .mc-stats{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
             <label class="switch"><input type="checkbox" id="briefActivity"><span class="slider-sw"></span></label>
           </div>
         </div>
-        <button class="btn btn-primary" id="runBtn" style="width:100%" onclick="runSim()"><svg class="ic-svg run-zap"><use href="#i-zap"/></svg>构建数字世界并推演</button>
+        <div class="glass sec" id="formulaCard" style="margin-top:16px;display:none">
+          <div class="sec-title"><span class="bar"></span>爆款率公式 · 可调参数</div>
+          <div class="sec-desc">预测爆款率 = 基准(形式·情绪·主题 加权) × 账号校准 + 上帝变量加成，活动期再 × 抬升。拖动即可改变模型，看清每个权重的影响（默认即为当前引擎设定）。</div>
+          <div class="field"><label>形式权重 <b id="wfL" style="color:var(--cyan)">40</b>%</label><input type="range" id="wf" min="0" max="100" value="40" step="5" oninput="document.getElementById('wfL').textContent=this.value"></div>
+          <div class="field"><label>情绪权重 <b id="weL" style="color:var(--cyan)">30</b>%</label><input type="range" id="we" min="0" max="100" value="30" step="5" oninput="document.getElementById('weL').textContent=this.value"></div>
+          <div class="field"><label>主题权重 <b id="wtL" style="color:var(--cyan)">30</b>%</label><input type="range" id="wt" min="0" max="100" value="30" step="5" oninput="document.getElementById('wtL').textContent=this.value"></div>
+          <div class="field"><label>账号校准 · 基础 <b id="abL" style="color:var(--cyan)">0.70</b></label><input type="range" id="authBase" min="0" max="1" value="0.7" step="0.05" oninput="document.getElementById('abL').textContent=(+this.value).toFixed(2)"></div>
+          <div class="field"><label>账号校准 · 斜率 <b id="akL" style="color:var(--cyan)">0.30</b></label><input type="range" id="authK" min="0" max="1" value="0.3" step="0.05" oninput="document.getElementById('akL').textContent=(+this.value).toFixed(2)"></div>
+          <div class="field"><label>上帝变量①加成幅度 ±<b id="g1L" style="color:var(--cyan)">10</b></label><input type="range" id="god1" min="0" max="40" value="20" step="2" oninput="document.getElementById('g1L').textContent=(this.value/2)"></div>
+          <div class="field"><label>上帝变量②加成幅度 ±<b id="g2L" style="color:var(--cyan)">6</b></label><input type="range" id="god2" min="0" max="30" value="12" step="2" oninput="document.getElementById('g2L').textContent=(this.value/2)"></div>
+          <div class="field"><label>上帝变量③加成幅度 ±<b id="g3L" style="color:var(--cyan)">4</b></label><input type="range" id="god3" min="0" max="20" value="8" step="1" oninput="document.getElementById('g3L').textContent=(this.value/2)"></div>
+          <div class="field"><label>活动抬升系数 ×<b id="alL" style="color:var(--cyan)">1.8</b></label><input type="range" id="actLift" min="1" max="3" value="1.8" step="0.1" oninput="document.getElementById('alL').textContent=(+this.value).toFixed(1)"></div>
+        </div>
+        <button class="btn btn-primary" id="runBtn" style="width:100%;margin-top:16px" onclick="runSim()"><svg class="ic-svg run-zap"><use href="#i-zap"/></svg>构建数字世界并推演</button>
       </div>
 
       <div class="glass sec">
@@ -1302,6 +1315,7 @@ function refreshChips(){
   bindHover();updateVarLabels();
   if(typeof renderDSList==='function')renderDSList();
   const bc=document.getElementById('briefCard');if(bc)bc.style.display=(s==='social'||s==='innovation')?'block':'none';
+  const fc=document.getElementById('formulaCard');if(fc)fc.style.display=(s==='social')?'block':'none';
   const mb=document.getElementById('mbLabel');if(mb)mb.innerHTML=(s==='social'?'账号矩阵粉丝规模（曝光换算用）：':(s==='category'?'品类可触达人群（估算用）：':(s==='innovation'?'预估市场人群（成功率换算用）：':'目标人群基数（仅新品销量场景用于估算）：')))+'<b id="mbL">'+(document.getElementById('marketBase')?document.getElementById('marketBase').value:'100000')+'</b>';
 }
 // 移到脚本末尾执行（依赖 DATA_SOURCES / EXPLAINS）
@@ -1508,27 +1522,34 @@ function getBrief(){
 }
 function fmtK(n){n=Math.round(n);if(n>=1e6)return (n/1e6).toFixed(1)+'M';if(n>=1e3)return (n/1e3).toFixed(0)+'K';return ''+n}
 // 预测爆款率：真实数据基准（形式/主题/情绪/账号）× 上帝变量 × 活动系数
+// 公式参数可由工作台「爆款率公式 · 可调参数」面板实时调整（带默认值兜底）
+function fparam(id,def){const el=document.getElementById(id);const v=el?+el.value:NaN;return isFinite(v)?v:def;}
 function predictViral(b){
   const formR=(SOCIAL_BASE.contentTypes[b.form]||{viral:SOCIAL_BASE.avgViral}).viral;
   const emoR=SOCIAL_BASE.emotions[b.emo]||SOCIAL_BASE.avgViral;
   const themeR=SOCIAL_BASE.themes[b.theme]||SOCIAL_BASE.avgViral;
   const authMul=(SOCIAL_BASE.authorTypes[b.author]||{infl:0.5}).infl;
-  const base=0.4*formR+0.3*emoR+0.3*themeR;                 // 数据基准（40-80 区间）
-  const authFactor=0.7+0.3*authMul;                          // 0.82-1.0（弱账号不放大，强账号不破顶）
+  const wf=fparam('wf',40),we=fparam('we',30),wt=fparam('wt',30);const wsum=wf+we+wt||100;
+  const base=(wf*formR+we*emoR+wt*themeR)/wsum;             // 归一化加权平均（40-80 区间）
+  const authBase=fparam('authBase',0.7),authK=fparam('authK',0.3);
+  const authFactor=authBase+authK*authMul;                  // 账号校准
   let rate=base*authFactor;
-  rate+=(b.v1-0.5)*20;                                       // 内容契合度：±10
-  rate+=(b.v2-0.5)*12;                                       // 互动/激励：±6
-  rate+=(b.v3-0.5)*8;                                        // KOL 投放：±4
-  if(b.v3>0.3)rate+=(b.v3-0.3)*12*Math.max(0,authMul-0.5);   // KOL 投放对高影响力账号额外放大
-  if(b.activity)rate*=SOCIAL_BASE.activityLift;              // 活动节点抬升
-  return clip(Math.round(rate),0,100);
+  const g1=fparam('god1',20),g2=fparam('god2',12),g3=fparam('god3',8);
+  const dG1=Math.round((b.v1-0.5)*g1),dG2=Math.round((b.v2-0.5)*g2),dG3=Math.round((b.v3-0.5)*g3);
+  rate+=dG1;                                                // 内容契合度（默认 ±10）
+  rate+=dG2;                                                // 互动/激励（默认 ±6）
+  rate+=dG3;                                                // KOL 投放（默认 ±4）
+  if(b.v3>0.3)rate+=(b.v3-0.3)*12*Math.max(0,authMul-0.5);   // KOL 对高影响力账号额外放大
+  const actLift=b.activity?fparam('actLift',SOCIAL_BASE.activityLift):1;
+  if(b.activity)rate*=actLift;                             // 活动节点抬升
+  return {rate:clip(Math.round(rate),0,100),detail:{base:Math.round(base),authFactor:+authFactor.toFixed(2),g1:dG1,g2:dG2,g3:dG3,actLift:+actLift.toFixed(2),wf,we,wt}};
 }
 function predictExposure(reachPct,b){
   const followers=Math.max(1,+(document.getElementById('marketBase')?document.getElementById('marketBase').value:SOCIAL_BASE.followers)||SOCIAL_BASE.followers);
   SOCIAL_BASE.followers=followers;
   let expo=reachPct/100*followers;
   expo*=(1+1.2*b.v3*((SOCIAL_BASE.authorTypes[b.author]||{infl:0.5}).infl)); // KOL 放大曝光
-  if(b.activity)expo*=SOCIAL_BASE.activityLift;
+  if(b.activity)expo*=fparam('actLift',SOCIAL_BASE.activityLift);
   return {lo:Math.round(expo*0.8),hi:Math.round(expo*1.25),mid:Math.round(expo)};
 }
 
@@ -1615,7 +1636,7 @@ function computeMetrics(scene){
     out.summary='基于领先用户数据匹配 + ABM 仿真推演：创意成功率 '+success+'%，创意度 '+innovScore+'/100，前瞻性 '+futurity+'/100。'+(success>=60?'该创意综合评估良好，建议进入立项流程。':'创意有亮但风险较高，建议先做领先用户验证再投入开发。');
   }else{
     const b=getBrief();
-    const viral=predictViral(b);
+    const vr=predictViral(b);const viral=vr.rate;
     const expo=predictExposure(reachPct,b);
     const formBench=SOCIAL_BASE.contentTypes[b.form]||{viral:SOCIAL_BASE.avgViral,eng:0.05};
     const emoBench=SOCIAL_BASE.emotions[b.emo]||SOCIAL_BASE.avgViral;
@@ -1635,6 +1656,7 @@ function computeMetrics(scene){
       ['翻车风险',negPct>25?'终态负面 '+negPct+'%，偏高——差评传播者易在弱监测处引爆二次舆情，建议前置埋点。':'终态负面 '+negPct+'%，风险可控；活动期仍建议实时监测。']
     ];
     out.bench={form:b.form,formV:formBench.viral,emo:b.emo,emoV:emoBench,theme:b.theme,themeV:SOCIAL_BASE.themes[b.theme]||SOCIAL_BASE.avgViral,author:b.author,authMul,bestHours:SOCIAL_BASE.bestHours,activity:b.activity,activityLift:SOCIAL_BASE.activityLift,topAccounts:SOCIAL_BASE.topAccounts};
+    out.bench.detail=vr.detail;
     out.summary='基于 '+N+' 个智能体 + 真实社媒基准推演：计划内容预测爆款率 '+viral+'%（全站均值 '+SOCIAL_BASE.avgViral+'%），预计曝光 '+fmtK(expo.lo)+'~'+fmtK(expo.hi)+'；终态触达 '+reachPct.toFixed(0)+'%、转发系数 K='+K.toFixed(2)+'。'+(b.activity?'活动节点优选，爆款率额外 ×'+SOCIAL_BASE.activityLift+'。':'')+(viral>=SOCIAL_BASE.avgViral?'选题契合度良好，可放量。':'建议优化内容形式/主题/情绪或加大 KOL 投放后再放量。');
   }
   return out;
@@ -1860,6 +1882,7 @@ function drawReport(){
       '<tr><td>主题</td><td>'+b.theme+'</td><td class="hl">'+b.themeV+'%</td><td class="'+(b.themeV>=SOCIAL_BASE.avgViral?'good':'bad')+'">'+(b.themeV>=SOCIAL_BASE.avgViral?'≥均值 ✓':'<均值 ⚠')+'</td></tr>'+
       '<tr><td>账号类型</td><td>'+b.author+'</td><td class="hl">×'+b.authMul+'</td><td>'+(+b.authMul>=0.6?'放大效应强 ✓':'放大偏弱 ⚠')+'</td></tr>'+
       '<tr><td>绑定活动</td><td>'+(b.activity?'是':'否')+'</td><td class="hl">×'+(b.activity?b.activityLift:'1.0')+'</td><td>'+(b.activity?'活动期抬升明显 ✓':'无活动加成')+'</td></tr>'+
+      '<tr style="background:rgba(0,212,255,.06)"><td>公式权重<br><span style="font-size:11px;color:var(--ts)">（可调）</span></td><td colspan="3">形式 <b>'+b.detail.wf+'%</b> · 情绪 <b>'+b.detail.we+'%</b> · 主题 <b>'+b.detail.wt+'%</b> &nbsp;|&nbsp; 账号校准 <b>'+b.detail.authFactor+'</b> &nbsp;|&nbsp; 活动 ×<b>'+b.detail.actLift+'</b></td></tr>'+
       '<tr><td>最佳发帖时段</td><td colspan="3">'+(b.bestHours&&b.bestHours.length?b.bestHours.map(h=>h+':00').join(' / '):'—')+'</td></tr>'+
       '</tbody></table>';
     // 账号矩阵
@@ -2050,9 +2073,9 @@ const DATA_SOURCES=[
    scenes:{product:2,social:1,category:2,innovation:3},handler:'innovation',accuracy:'高',
    notes:'<b>校准内容</b>：INNOVATION_BASE 竞争缺口/已知解决方案/品类分布。导入后新品创意预测的创意度/可行性显著提升。'},
   {id:'lead',name:'领先用户反馈专区',icon:'<svg class="ic-svg"><use href="#i-star"/></svg>',desc:'领先用户表达的需求/痛点/JTBD，含时间维度（首次表达月份）与强度',
-   url:'https://raw.githubusercontent.com/ffswwwda/category-insight-hub/main/lead_user_records.json',
+   url:'https://raw.githubusercontent.com/ffswwwda/user-research-console/main/lead_user_records.json',
    scenes:{product:1,social:0,category:2,innovation:3},handler:'lead',accuracy:'高',
-   notes:'<b>校准内容</b>：INNOVATION_BASE 的需求验证度/前瞻性/需求强度（从领先用户记录时间轴推导）。需要把领先用户数据导出为 lead_user_records.json 上传到此 URL。'},
+   notes:'<b>校准内容</b>：INNOVATION_BASE 的需求验证度/前瞻性/需求强度（从领先用户记录时间轴推导）。数据文件已随本仓库部署在 main 分支根目录 lead_user_records.json，可替换为真实导出。'},
   {id:'leadFallback',name:'领先用户反馈（手动粘贴）',icon:'<svg class="ic-svg"><use href="#i-star"/></svg>',desc:'没有远程文件时，直接粘贴 JSON 到下方文本框',
    url:null,
    scenes:{product:1,social:0,category:2,innovation:3},handler:'lead',accuracy:'中',
