@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "description": "领先用户（Lead User）反馈记录集 —— 用于『新品创意可行性预测』场景校准 INNOVATION_BASE。领先用户指那些需求领先于市场、已自行摸索变通方案的高价值用户（von Hippel 领先用户理论）。",
+    "source": "category-insight-hub · 领先用户反馈专区（导出示例 / 占位数据，正式使用请替换为真实导出）",
+    "schema": {
+      "leadUsers": "数组，每条为一个领先用户的反馈记录",
+      "字段说明": {
+        "need": "该用户表达的需求 / 痛点 / JTBD（必填，可别名 problem / text）",
+        "category": "所属类目 / 场景（可别名 cat）",
+        "first_seen": "首次表达该需求的年月，格式 YYYY-MM 或 YYYY/MM（用于推导『前瞻性 / 市场准备度』）",
+        "intensity": "需求强度 0–1（越高代表越强烈的未被满足需求）",
+        "frequency": "该需求被提及 / 复现的频次（正整数，影响『需求验证度』）",
+        "workaround": "是否已存在用户自发的变通方案（true 表示市场已出现草莽解法，影响『需求紧迫度』）",
+        "tags": "标签数组，便于聚类"
+      }
+    }
+  },
+  "leadUsers": [
+    {
+      "need": "希望扫地机器人能在我睡觉时不发出任何灯光和声音，现在待机指示灯太亮、回充还有提示音",
+      "category": "静音家电",
+      "first_seen": "2021-03",
+      "intensity": 0.82,
+      "frequency": 7,
+      "workaround": false,
+      "tags": ["静音", "睡眠场景", "指示灯干扰"]
+    },
+    {
+      "need": "想给阳台绿植做自动滴灌，但市面上的控制器都要接水管、还得很会折腾代码",
+      "category": "园艺自动化",
+      "first_seen": "2021-08",
+      "intensity": 0.74,
+      "frequency": 5,
+      "workaround": true,
+      "tags": ["阳台", "懒人养护", "低门槛"]
+    },
+    {
+      "need": "出差时猫砂盆的臭味和清理是痛点，最好有人回家前自动除臭、还能远程看猫有没有正常上厕所",
+      "category": "宠物智能",
+      "first_seen": "2022-01",
+      "intensity": 0.88,
+      "frequency": 9,
+      "workaround": false,
+      "tags": ["猫砂盆", "远程看护", "除臭"]
+    },
+    {
+      "need": "护肤成分党想要『按肤质+季节』动态调整的精华，而不是一瓶用全年",
+      "category": "成分护肤",
+      "first_seen": "2022-05",
+      "intensity": 0.69,
+      "frequency": 4,
+      "workaround": true,
+      "tags": ["成分党", "个性化", "季节适配"]
+    },
+    {
+      "need": "厨房小家电太多插头，希望一个带计量和定时断电的轨道插座，能手机看每个电器耗电",
+      "category": "厨房电器",
+      "first_seen": "2022-09",
+      "intensity": 0.61,
+      "frequency": 3,
+      "workaround": false,
+      "tags": ["用电安全", "能耗可见", "轨道插座"]
+    },
+    {
+      "need": "婴儿夜醒频繁，想要能无声提醒、不刺眼、还能记录作息曲线的监护设备",
+      "category": "母婴照护",
+      "first_seen": "2023-02",
+      "intensity": 0.91,
+      "frequency": 11,
+      "workaround": false,
+      "tags": ["婴儿睡眠", "无干扰", "作息记录"]
+    },
+    {
+      "need": "租房党不想打洞装投影，想要能随墙面颜色自动校正、白天也看得清的便携投影",
+      "category": "便携影音",
+      "first_seen": "2023-04",
+      "intensity": 0.66,
+      "frequency": 4,
+      "workaround": true,
+      "tags": ["租房友好", "免安装", "抗光"]
+    },
+    {
+      "need": "健身党在酒店也想做力量训练，希望有可折叠、能计数和纠错姿态的小器械",
+      "category": "居家健身",
+      "first_seen": "2023-07",
+      "intensity": 0.7,
+      "frequency": 6,
+      "workaround": false,
+      "tags": ["差旅健身", "姿态纠错", "可折叠"]
+    },
+    {
+      "need": "老年人独居，想要不戴手环也能监测跌倒、并能一键呼叫家人的哑铃式传感器",
+      "category": "银发科技",
+      "first_seen": "2023-11",
+      "intensity": 0.85,
+      "frequency": 8,
+      "workaround": false,
+      "tags": ["跌倒监测", "无穿戴", "紧急呼叫"]
+    },
+    {
+      "need": "咖啡爱好者想要家用能稳定复刻店里的萃取曲线，还得告诉我豆子什么时候该换了",
+      "category": "咖啡器具",
+      "first_seen": "2024-01",
+      "intensity": 0.63,
+      "frequency": 3,
+      "workaround": true,
+      "tags": ["萃取曲线", "豆龄提醒", "玩家向"]
+    },
+    {
+      "need": "通勤包希望有独立电脑仓+磁吸快取，雨天不湿、还能当临时小桌板用",
+      "category": "出行装备",
+      "first_seen": "2024-03",
+      "intensity": 0.58,
+      "frequency": 2,
+      "workaround": false,
+      "tags": ["通勤", "快取", "多功能"]
+    },
+    {
+      "need": "想给父母装个能语音播报药名和剂量的智能药盒，最好错服漏服会提醒我",
+      "category": "健康管理",
+      "first_seen": "2024-06",
+      "intensity": 0.79,
+      "frequency": 5,
+      "workaround": false,
+      "tags": ["用药依从", "远程提醒", "适老化"]
+    },
+    {
+      "need": "桌面太乱，希望显示器能自带理线槽和无线充电，最好支架还能电动升降记忆高度",
+      "category": "桌面办公",
+      "first_seen": "2024-10",
+      "intensity": 0.55,
+      "frequency": 2,
+      "workaround": true,
+      "tags": ["理线", "无线充", "电动升降"]
+    },
+    {
+      "need": "露营想要能当充电宝、又能煮水、还能当氛围灯的集成小方盒，别让我带一堆",
+      "category": "户外装备",
+      "first_seen": "2025-02",
+      "intensity": 0.72,
+      "frequency": 4,
+      "workaround": false,
+      "tags": ["露营", "多合一", "便携能源"]
+    }
+  ]
+}
